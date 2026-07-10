@@ -139,7 +139,7 @@ export default function Home() {
             </p>
 
             <h1 className="mt-1 text-2xl font-bold sm:text-3xl">
-              Aaron's Trading Journal
+              Aaron's Trading Journey
             </h1>
           </div>
 
