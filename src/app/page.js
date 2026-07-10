@@ -5,6 +5,8 @@ import DashboardCard from "@/app/components/DashboardCard";
 import TradeForm from "@/app/components/TradeForm";
 import TradeTable from "@/app/components/TradeTable";
 import TradeCalendar from "@/app/components/TradeCalendar";
+import TradeDetailsModal from "@/app/components/TradeDetailsModal";
+import DayTradesModal from "@/app/components/DayTradesModal";
 
 import {
   totalProfit,
@@ -48,6 +50,41 @@ export default function Home() {
   const [showTradeModal, setShowTradeModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [settingsBalance, setSettingsBalance] = useState("");
+  const [selectedTrade, setSelectedTrade] = useState(null);
+  const [selectedDay, setSelectedDay] = useState({
+  date: "",
+  trades: [],
+});
+
+function openAddTradeForDate(date) {
+  setForm({
+    ...emptyForm,
+    date,
+  });
+
+  setShowTradeModal(true);
+}
+
+function openCalendarTrades(date, dayTrades) {
+  if (dayTrades.length === 1) {
+    setSelectedTrade(dayTrades[0]);
+    return;
+  }
+
+  setSelectedDay({
+    date,
+    trades: dayTrades,
+  });
+}
+
+function selectTradeFromDay(trade) {
+  setSelectedDay({
+    date: "",
+    trades: [],
+  });
+
+  setSelectedTrade(trade);
+}
 
   useEffect(() => {
     setTrades(getTrades());
@@ -224,11 +261,15 @@ export default function Home() {
           />
         </section>
 
-        <TradeCalendar trades={trades} />
+        <TradeCalendar trades={trades}
+        onTradeDayClick={openCalendarTrades}
+        onEmptyDayClick={openAddTradeForDate}
+     />
 
         <TradeTable
           trades={trades}
           deleteTrade={deleteTrade}
+          onViewTrade={setSelectedTrade}
         />
       </div>
 
@@ -257,6 +298,26 @@ export default function Home() {
           closeModal={() => setShowTradeModal(false)}
         />
       )}
+      {selectedDay.trades.length > 0 && (
+  <DayTradesModal
+    date={selectedDay.date}
+    trades={selectedDay.trades}
+    onSelectTrade={selectTradeFromDay}
+    closeModal={() =>
+      setSelectedDay({
+        date: "",
+        trades: [],
+      })
+    }
+  />
+)}
+
+{selectedTrade && (
+  <TradeDetailsModal
+    trade={selectedTrade}
+    closeModal={() => setSelectedTrade(null)}
+  />
+)}
     </main>
   );
 }
