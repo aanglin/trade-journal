@@ -7,6 +7,20 @@ import TradeTable from "@/app/components/TradeTable";
 import TradeCalendar from "@/app/components/TradeCalendar";
 import TradeDetailsModal from "@/app/components/TradeDetailsModal";
 import DayTradesModal from "@/app/components/DayTradesModal";
+import { signOut } from "firebase/auth";
+
+import AuthScreen from "./components/AuthScreen";
+import { useAuth } from "./context/AuthContext";
+import { auth } from "@/app/lib/firebase";
+
+import {
+  addUserTrade,
+  createUserProfile,
+  deleteUserTrade,
+  getUserSettings,
+  getUserTrades,
+  saveUserSettings,
+} from "@/app/lib/firestore";
 
 import {
   totalProfit,
@@ -18,12 +32,7 @@ import {
   profitByPeriod,
 } from "@/app/lib/calculations";
 
-import {
-  getTrades,
-  saveTrades,
-  getSettings,
-  saveSettings,
-} from "@/app/lib/storage";
+
 
 const emptyForm = {
   ticker: "",
@@ -40,7 +49,8 @@ const emptyForm = {
 
 export default function Home() {
   const [trades, setTrades] = useState([]);
-
+const { user, authLoading } = useAuth();
+const [dataLoading, setDataLoading] = useState(true);
   const [settings, setSettings] = useState({
     startingBalance: "",
     accountInitialized: false,
@@ -86,46 +96,96 @@ function selectTradeFromDay(trade) {
   setSelectedTrade(trade);
 }
 
-  useEffect(() => {
-    setTrades(getTrades());
+useEffect(() => {
+  if (!user) {
+    setTrades([]);
+    setDataLoading(false);
+    return;
+  }
 
-    const savedSettings = getSettings();
+  let active = true;
 
-    setSettings({
-      startingBalance: savedSettings.startingBalance ?? "",
-      accountInitialized:
-        savedSettings.accountInitialized ??
-        Boolean(savedSettings.startingBalance),
-    });
-  }, []);
+  async function loadUserData() {
+    setDataLoading(true);
 
-  useEffect(() => {
-    saveTrades(trades);
-  }, [trades]);
+    try {
+      await createUserProfile(user);
 
-  useEffect(() => {
-    saveSettings(settings);
-  }, [settings]);
+      const [savedTrades, savedSettings] =
+        await Promise.all([
+          getUserTrades(user.uid),
+          getUserSettings(user.uid),
+        ]);
 
-  function addTrade(e) {
-    e.preventDefault();
+      if (!active) return;
 
-    const newTrade = {
-      id: crypto.randomUUID(),
-      ...form,
-      ticker: form.ticker.trim().toUpperCase(),
-    };
+      setTrades(savedTrades);
 
-    setTrades((currentTrades) => [newTrade, ...currentTrades]);
+      setSettings({
+        startingBalance:
+          savedSettings.startingBalance ?? "",
+        accountInitialized:
+          savedSettings.accountInitialized ?? false,
+      });
+    } catch (error) {
+      console.error("Unable to load user data:", error);
+    } finally {
+      if (active) {
+        setDataLoading(false);
+      }
+    }
+  }
+
+  loadUserData();
+
+  return () => {
+    active = false;
+  };
+}, [user]);
+
+  async function addTrade(event) {
+  event.preventDefault();
+
+  if (!user) return;
+
+  const tradeToSave = {
+    ...form,
+    ticker: form.ticker.trim().toUpperCase(),
+  };
+
+  try {
+    const savedTrade = await addUserTrade(
+      user.uid,
+      tradeToSave
+    );
+
+    setTrades((currentTrades) => [
+      savedTrade,
+      ...currentTrades,
+    ]);
+
     setForm(emptyForm);
     setShowTradeModal(false);
+  } catch (error) {
+    console.error("Unable to save trade:", error);
   }
+}
 
-  function deleteTrade(id) {
+  async function deleteTrade(tradeId) {
+  if (!user) return;
+
+  try {
+    await deleteUserTrade(user.uid, tradeId);
+
     setTrades((currentTrades) =>
-      currentTrades.filter((trade) => trade.id !== id)
+      currentTrades.filter(
+        (trade) => trade.id !== tradeId
+      )
     );
+  } catch (error) {
+    console.error("Unable to delete trade:", error);
   }
+}
 
   function openTradeModal() {
     setForm(emptyForm);
@@ -137,22 +197,37 @@ function selectTradeFromDay(trade) {
     setShowSettingsModal(true);
   }
 
-  function saveStartingBalance(e) {
-    e.preventDefault();
+  async function saveStartingBalance(event) {
+  event.preventDefault();
 
-    const balance = Number(settingsBalance);
+  if (!user) return;
 
-    if (!Number.isFinite(balance) || balance < 0) {
-      return;
-    }
+  const balance = Number(settingsBalance);
 
-    setSettings({
-      startingBalance: balance,
-      accountInitialized: true,
-    });
-
-    setShowSettingsModal(false);
+  if (!Number.isFinite(balance) || balance < 0) {
+    return;
   }
+
+  const updatedSettings = {
+    startingBalance: balance,
+    accountInitialized: true,
+  };
+
+  try {
+    await saveUserSettings(
+      user.uid,
+      updatedSettings
+    );
+
+    setSettings(updatedSettings);
+    setShowSettingsModal(false);
+  } catch (error) {
+    console.error(
+      "Unable to save account settings:",
+      error
+    );
+  }
+}
 
   const netPL = totalProfit(trades);
 
@@ -166,6 +241,18 @@ function selectTradeFromDay(trade) {
   const returnPercentage =
     startingBalance > 0 ? (netPL / startingBalance) * 100 : 0;
 
+    if (authLoading) {
+  return <LoadingScreen message="Checking account..." />;
+}
+
+if (!user) {
+  return <AuthScreen />;
+}
+
+if (dataLoading) {
+  return <LoadingScreen message="Loading trading journal..." />;
+}
+
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100">
       <header className="border-b border-slate-800 bg-slate-950/95 backdrop-blur">
@@ -175,9 +262,11 @@ function selectTradeFromDay(trade) {
               Trading Dashboard
             </p>
 
-            <h1 className="mt-1 text-2xl font-bold sm:text-3xl">
-              Aaron's Trading Journey
-            </h1>
+           <h1 className="mt-1 text-2xl font-bold sm:text-3xl">
+  {user.displayName
+    ? `${user.displayName}'s Trading Journey`
+    : "My Trading Journey"}
+</h1>
           </div>
 
           <div className="flex items-center gap-3">
@@ -196,6 +285,13 @@ function selectTradeFromDay(trade) {
             >
               Add Trade
             </button>
+            <button
+  type="button"
+  onClick={() => signOut(auth)}
+  className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 font-semibold text-slate-300 transition hover:bg-slate-700 hover:text-white"
+>
+  Sign Out
+</button>
           </div>
         </div>
       </header>
@@ -495,5 +591,21 @@ function formatPercentage(amount) {
 
   return "0.00%";
 }
+
+function LoadingScreen({ message }) {
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-slate-950 text-slate-100">
+      <div className="text-center">
+        <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-slate-700 border-t-blue-500" />
+
+        <p className="mt-4 text-sm text-slate-400">
+          {message}
+        </p>
+      </div>
+    </main>
+  );
+}
+
+
 
 
