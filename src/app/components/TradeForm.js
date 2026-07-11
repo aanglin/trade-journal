@@ -8,8 +8,10 @@ const inputClass =
 export default function TradeForm({
   form,
   setForm,
-  addTrade,
+  saveTrade,
   closeModal,
+  isEditing,
+  submitting,
 }) {
   function handleChange(e) {
     const { name, value } = e.target;
@@ -50,13 +52,13 @@ export default function TradeForm({
       <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl shadow-black/50">
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-800 bg-slate-900 px-6 py-5">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-400">
-              New Journal Entry
-            </p>
+           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-400">
+  {isEditing ? "Update Journal Entry" : "New Journal Entry"}
+</p>
 
-            <h2 className="mt-1 text-2xl font-bold text-white">
-              Add Trade
-            </h2>
+<h2 className="mt-1 text-2xl font-bold text-white">
+  {isEditing ? "Edit Trade" : "Add Trade"}
+</h2>
           </div>
 
           <button
@@ -69,7 +71,7 @@ export default function TradeForm({
         </div>
 
         <form
-          onSubmit={addTrade}
+          onSubmit={saveTrade}
           className="grid gap-5 p-6 md:grid-cols-2"
         >
           <FormField label="Ticker">
@@ -221,11 +223,18 @@ export default function TradeForm({
             </button>
 
             <button
-              type="submit"
-              className="rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            >
-              Save Trade
-            </button>
+  type="submit"
+  disabled={submitting}
+  className="rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+>
+  {submitting
+    ? isEditing
+      ? "Updating..."
+      : "Saving..."
+    : isEditing
+      ? "Update Trade"
+      : "Save Trade"}
+</button>
           </div>
         </form>
       </div>

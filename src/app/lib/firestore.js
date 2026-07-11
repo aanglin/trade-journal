@@ -150,9 +150,15 @@ export async function addUserTrade(userId, trade) {
 export async function updateUserTrade(
   userId,
   tradeId,
-  changes
+  trade
 ) {
-  requireUserId(userId);
+  if (!userId) {
+    throw new Error("A signed-in user is required.");
+  }
+
+  if (!tradeId) {
+    throw new Error("A trade ID is required.");
+  }
 
   const tradeReference = doc(
     db,
@@ -163,10 +169,39 @@ export async function updateUserTrade(
   );
 
   await updateDoc(tradeReference, {
-    ...changes,
+    ticker: trade.ticker.trim().toUpperCase(),
+    date: trade.date,
+    direction: trade.direction,
+    entryPrice: Number(trade.entryPrice),
+    exitPrice: Number(trade.exitPrice),
+    contracts: Number(trade.contracts),
+    commission: Number(trade.commission || 0),
+    fees: Number(trade.fees || 0),
+    setup: trade.setup || "",
+    notes: trade.notes || "",
     updatedAt: serverTimestamp(),
   });
 }
+// export async function updateUserTrade(
+//   userId,
+//   tradeId,
+//   changes
+// ) {
+//   requireUserId(userId);
+
+//   const tradeReference = doc(
+//     db,
+//     "users",
+//     userId,
+//     "trades",
+//     tradeId
+//   );
+
+//   await updateDoc(tradeReference, {
+//     ...changes,
+//     updatedAt: serverTimestamp(),
+//   });
+// }
 
 export async function deleteUserTrade(
   userId,

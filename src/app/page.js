@@ -20,6 +20,7 @@ import {
   getUserSettings,
   getUserTrades,
   saveUserSettings,
+  updateUserTrade,
 } from "@/app/lib/firestore";
 
 import {
@@ -55,6 +56,8 @@ const [dataLoading, setDataLoading] = useState(true);
     startingBalance: "",
     accountInitialized: false,
   });
+  const [editingTrade, setEditingTrade] = useState(null);
+const [tradeSubmitting, setTradeSubmitting] = useState(false);
 
   const [form, setForm] = useState(emptyForm);
   const [showTradeModal, setShowTradeModal] = useState(false);
@@ -66,7 +69,29 @@ const [dataLoading, setDataLoading] = useState(true);
   trades: [],
 });
 
+function openEditTrade(trade) {
+  setEditingTrade(trade);
+
+  setForm({
+    ticker: trade.ticker ?? "",
+    date: trade.date ?? "",
+    direction: trade.direction ?? "CALL",
+    entryPrice: String(trade.entryPrice ?? ""),
+    exitPrice: String(trade.exitPrice ?? ""),
+    contracts: String(trade.contracts ?? "1"),
+    commission: String(trade.commission ?? ""),
+    fees: String(trade.fees ?? ""),
+    setup: trade.setup ?? "Opening Range Breakout",
+    notes: trade.notes ?? "",
+  });
+
+  setSelectedTrade(null);
+  setShowTradeModal(true);
+}
+
 function openAddTradeForDate(date) {
+  setEditingTrade(null);
+
   setForm({
     ...emptyForm,
     date,
@@ -143,31 +168,70 @@ useEffect(() => {
   };
 }, [user]);
 
-  async function addTrade(event) {
+async function saveTrade(event) {
   event.preventDefault();
 
-  if (!user) return;
+  if (!user || tradeSubmitting) {
+    return;
+  }
 
   const tradeToSave = {
-    ...form,
     ticker: form.ticker.trim().toUpperCase(),
+    date: form.date,
+    direction: form.direction,
+    entryPrice: Number(form.entryPrice),
+    exitPrice: Number(form.exitPrice),
+    contracts: Number(form.contracts),
+    commission: Number(form.commission || 0),
+    fees: Number(form.fees || 0),
+    setup: form.setup || "",
+    notes: form.notes || "",
   };
 
-  try {
-    const savedTrade = await addUserTrade(
-      user.uid,
-      tradeToSave
-    );
+  setTradeSubmitting(true);
 
-    setTrades((currentTrades) => [
-      savedTrade,
-      ...currentTrades,
-    ]);
+  try {
+    if (editingTrade) {
+      await updateUserTrade(
+        user.uid,
+        editingTrade.id,
+        tradeToSave
+      );
+
+      setTrades((currentTrades) =>
+        currentTrades.map((trade) =>
+          trade.id === editingTrade.id
+            ? {
+                ...trade,
+                ...tradeToSave,
+              }
+            : trade
+        )
+      );
+    } else {
+      const savedTrade = await addUserTrade(
+        user.uid,
+        tradeToSave
+      );
+
+      setTrades((currentTrades) => [
+        savedTrade,
+        ...currentTrades,
+      ]);
+    }
 
     setForm(emptyForm);
+    setEditingTrade(null);
     setShowTradeModal(false);
   } catch (error) {
-    console.error("Unable to save trade:", error);
+    console.error(
+      editingTrade
+        ? "Unable to update trade:"
+        : "Unable to save trade:",
+      error
+    );
+  } finally {
+    setTradeSubmitting(false);
   }
 }
 
@@ -187,10 +251,17 @@ useEffect(() => {
   }
 }
 
-  function openTradeModal() {
-    setForm(emptyForm);
-    setShowTradeModal(true);
-  }
+function openTradeModal() {
+  setEditingTrade(null);
+
+  setForm({
+    ...emptyForm,
+    date: new Date().toLocaleDateString("en-CA"),
+  });
+
+  setShowTradeModal(true);
+}
+  
 
   function openSettingsModal() {
     setSettingsBalance(settings.startingBalance ?? "");
@@ -366,6 +437,7 @@ if (dataLoading) {
           trades={trades}
           deleteTrade={deleteTrade}
           onViewTrade={setSelectedTrade}
+          onEditTrade={openEditTrade}
         />
       </div>
 
@@ -388,10 +460,16 @@ if (dataLoading) {
 
       {showTradeModal && (
         <TradeForm
-          form={form}
-          setForm={setForm}
-          addTrade={addTrade}
-          closeModal={() => setShowTradeModal(false)}
+         form={form}
+  setForm={setForm}
+  saveTrade={saveTrade}
+  closeModal={() => {
+    setShowTradeModal(false);
+    setEditingTrade(null);
+    setForm(emptyForm);
+  }}
+  isEditing={Boolean(editingTrade)}
+  submitting={tradeSubmitting}
         />
       )}
       {selectedDay.trades.length > 0 && (
@@ -412,6 +490,7 @@ if (dataLoading) {
   <TradeDetailsModal
     trade={selectedTrade}
     closeModal={() => setSelectedTrade(null)}
+    onEditTrade={openEditTrade}
   />
 )}
     </main>

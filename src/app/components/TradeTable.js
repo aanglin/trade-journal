@@ -6,6 +6,7 @@ export default function TradeTable({
   trades,
   deleteTrade,
   onViewTrade,
+  onEditTrade,
 }) {
   return (
     <section className="rounded-2xl border border-slate-800 bg-slate-900 shadow-xl shadow-black/10">
@@ -107,6 +108,14 @@ export default function TradeTable({
                           View
                         </button>
 
+
+<button
+  type="button"
+  onClick={() => onEditTrade(trade)}
+  className="rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-2 text-sm font-medium text-blue-400 transition hover:bg-blue-500/20"
+>
+  Edit
+</button>
                         <button
                           type="button"
                           onClick={() => deleteTrade(trade.id)}

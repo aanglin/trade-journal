@@ -2,7 +2,7 @@
 
 import { calculateProfit } from "@/app/lib/calculations";
 
-export default function TradeDetailsModal({ trade, closeModal }) {
+export default function TradeDetailsModal({ trade, closeModal, onEditTrade }) {
   if (!trade) return null;
 
   const profit = calculateProfit(trade);
@@ -32,13 +32,24 @@ export default function TradeDetailsModal({ trade, closeModal }) {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={closeModal}
-            className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white"
-          >
-            Close
-          </button>
+<div className="flex gap-2">
+  <button
+    type="button"
+    onClick={() => onEditTrade(trade)}
+    className="rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-sm font-medium text-blue-400 hover:bg-blue-500/20"
+  >
+    Edit
+  </button>
+
+  <button
+    type="button"
+    onClick={closeModal}
+    className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white"
+  >
+    Close
+  </button>
+</div>
+
         </div>
 
         <div className="p-6">
