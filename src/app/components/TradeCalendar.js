@@ -1,20 +1,18 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { calculateProfit } from "@/app/lib/calculations";
 
 const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-export default function TradeCalendar({ trades, onEmptyDayClick, onTradeDayClick }) {
-  const [currentMonth, setCurrentMonth] = useState(() => {
-    const today = new Date();
-
-    return new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      1
-    );
-  });
+export default function TradeCalendar({
+  trades,
+  currentMonth,
+  setCurrentMonth,
+  onEmptyDayClick,
+  onTradeDayClick,
+}) {
+  
 
   const dailyResults = useMemo(() => {
   return trades.reduce((results, trade) => {

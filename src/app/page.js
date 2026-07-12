@@ -68,6 +68,15 @@ const [tradeSubmitting, setTradeSubmitting] = useState(false);
   trades: [],
 });
 const [tradeHistoryCollapsed, setTradeHistoryCollapsed] = useState(false);
+const [selectedCalendarMonth, setSelectedCalendarMonth] = useState(() => {
+  const today = new Date();
+
+  return new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    1
+  );
+});
 
 function openEditTrade(trade) {
   setEditingTrade(trade);
@@ -323,18 +332,22 @@ if (!user) {
 if (dataLoading) {
   return <LoadingScreen message="Loading trading journal..." />;
 }
-const currentDate = new Date();
-const currentYear = currentDate.getFullYear();
-const currentMonth = currentDate.getMonth();
+const selectedMonthYear =
+  selectedCalendarMonth.getFullYear();
 
-const currentMonthTrades = trades.filter((trade) => {
+const selectedMonthNumber =
+  selectedCalendarMonth.getMonth();
+
+const selectedMonthTrades = trades.filter((trade) => {
   if (!trade.date) return false;
 
-  const tradeDate = new Date(`${trade.date}T00:00:00`);
+  const tradeDate = new Date(
+    `${trade.date}T00:00:00`
+  );
 
   return (
-    tradeDate.getFullYear() === currentYear &&
-    tradeDate.getMonth() === currentMonth
+    tradeDate.getFullYear() === selectedMonthYear &&
+    tradeDate.getMonth() === selectedMonthNumber
   );
 });
 
@@ -443,19 +456,22 @@ const currentMonthTrades = trades.filter((trade) => {
           />
         </section>
 
-        <TradeCalendar trades={trades}
-        onTradeDayClick={openCalendarTrades}
-        onEmptyDayClick={openAddTradeForDate}
-     />
+        <TradeCalendar
+  trades={trades}
+  currentMonth={selectedCalendarMonth}
+  setCurrentMonth={setSelectedCalendarMonth}
+  onEmptyDayClick={openAddTradeForDate}
+  onTradeDayClick={openCalendarTrades}
+/>
 
         <TradeTable
-          trades={currentMonthTrades}
-          deleteTrade={deleteTrade}
-          onViewTrade={setSelectedTrade}
-          onEditTrade={openEditTrade}
-          collapsed={tradeHistoryCollapsed}
-          setCollapsed={setTradeHistoryCollapsed}
-        />
+  trades={selectedMonthTrades}
+  deleteTrade={deleteTrade}
+  onViewTrade={setSelectedTrade}
+  onEditTrade={openEditTrade}
+  collapsed={tradeHistoryCollapsed}
+  setCollapsed={setTradeHistoryCollapsed}
+/>
       </div>
 
       {!settings.accountInitialized && (
