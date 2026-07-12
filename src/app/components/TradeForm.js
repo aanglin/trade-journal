@@ -49,8 +49,8 @@ export default function TradeForm({
   }
 
   const automaticCommission = calculateCommission({
-  contracts: form.contracts,
-});
+    contracts: form.contracts,
+  });
 
   return (
     <div
@@ -60,13 +60,13 @@ export default function TradeForm({
       <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl shadow-black/50">
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-800 bg-slate-900 px-6 py-5">
           <div>
-           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-400">
-  {isEditing ? "Update Journal Entry" : "New Journal Entry"}
-</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-400">
+              {isEditing ? "Update Journal Entry" : "New Journal Entry"}
+            </p>
 
-<h2 className="mt-1 text-2xl font-bold text-white">
-  {isEditing ? "Edit Trade" : "Add Trade"}
-</h2>
+            <h2 className="mt-1 text-2xl font-bold text-white">
+              {isEditing ? "Edit Trade" : "Add Trade"}
+            </h2>
           </div>
 
           <button
@@ -158,27 +158,27 @@ export default function TradeForm({
           </FormField>
 
           <FormField label="Automatic Commission">
-  <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
-    <div className="flex items-center justify-between">
-      <span className="text-sm text-slate-400">
-        ${COMMISSION_PER_CONTRACT.toFixed(2)} per contract,
-        each side
-      </span>
+            <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-400">
+                  ${COMMISSION_PER_CONTRACT.toFixed(2)} per contract,
+                  each side
+                </span>
 
-      <span className="font-bold text-blue-400">
-        ${automaticCommission.toFixed(2)}
-      </span>
-    </div>
+                <span className="font-bold text-blue-400">
+                  ${automaticCommission.toFixed(2)}
+                </span>
+              </div>
 
-    <p className="mt-1 text-xs text-slate-500">
-      Based on {Number(form.contracts || 0)}{" "}
-      {Number(form.contracts) === 1
-        ? "contract"
-        : "contracts"}{" "}
-      for opening and closing the trade.
-    </p>
-  </div>
-</FormField>
+              <p className="mt-1 text-xs text-slate-500">
+                Based on {Number(form.contracts || 0)}{" "}
+                {Number(form.contracts) === 1
+                  ? "contract"
+                  : "contracts"}{" "}
+                for opening and closing the trade.
+              </p>
+            </div>
+          </FormField>
 
           <FormField label="Other Fees">
             <input
@@ -241,18 +241,18 @@ export default function TradeForm({
             </button>
 
             <button
-  type="submit"
-  disabled={submitting}
-  className="rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
->
-  {submitting
-    ? isEditing
-      ? "Updating..."
-      : "Saving..."
-    : isEditing
-      ? "Update Trade"
-      : "Save Trade"}
-</button>
+              type="submit"
+              disabled={submitting}
+              className="rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {submitting
+                ? isEditing
+                  ? "Updating..."
+                  : "Saving..."
+                : isEditing
+                  ? "Update Trade"
+                  : "Save Trade"}
+            </button>
           </div>
         </form>
       </div>

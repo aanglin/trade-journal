@@ -63,13 +63,12 @@ export default function DayTradesModal({
                 </div>
 
                 <p
-                  className={`font-bold ${
-                    profit > 0
-                      ? "text-emerald-400"
-                      : profit < 0
-                        ? "text-red-400"
-                        : "text-slate-300"
-                  }`}
+                  className={`font-bold ${profit > 0
+                    ? "text-emerald-400"
+                    : profit < 0
+                      ? "text-red-400"
+                      : "text-slate-300"
+                    }`}
                 >
                   {formatSignedMoney(profit)}
                 </p>

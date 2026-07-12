@@ -12,27 +12,27 @@ export default function TradeCalendar({
   onEmptyDayClick,
   onTradeDayClick,
 }) {
-  
+
 
   const dailyResults = useMemo(() => {
-  return trades.reduce((results, trade) => {
-    if (!trade.date) return results;
+    return trades.reduce((results, trade) => {
+      if (!trade.date) return results;
 
-    if (!results[trade.date]) {
-      results[trade.date] = {
-        profit: 0,
-        tradeCount: 0,
-        trades: [],
-      };
-    }
+      if (!results[trade.date]) {
+        results[trade.date] = {
+          profit: 0,
+          tradeCount: 0,
+          trades: [],
+        };
+      }
 
-    results[trade.date].profit += calculateProfit(trade);
-    results[trade.date].tradeCount += 1;
-    results[trade.date].trades.push(trade);
+      results[trade.date].profit += calculateProfit(trade);
+      results[trade.date].tradeCount += 1;
+      results[trade.date].trades.push(trade);
 
-    return results;
-  }, {});
-}, [trades]);
+      return results;
+    }, {});
+  }, [trades]);
 
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
@@ -161,14 +161,14 @@ export default function TradeCalendar({
               "bg-slate-900 hover:bg-slate-800";
 
             if (dayResult && profit > 0) {
-  dayStyle =
-    "bg-emerald-500/50 ring-1 ring-inset ring-emerald-300 hover:bg-emerald-500/65";
-}
+              dayStyle =
+                "bg-emerald-500/50 ring-1 ring-inset ring-emerald-300 hover:bg-emerald-500/65";
+            }
 
-if (dayResult && profit < 0) {
-  dayStyle =
-    "bg-red-500/50 ring-1 ring-inset ring-red-300 hover:bg-red-500/65";
-}
+            if (dayResult && profit < 0) {
+              dayStyle =
+                "bg-red-500/50 ring-1 ring-inset ring-red-300 hover:bg-red-500/65";
+            }
 
             if (dayResult && profit === 0) {
               dayStyle =
@@ -177,22 +177,22 @@ if (dayResult && profit < 0) {
 
             return (
               <button
-  key={dateKey}
-  type="button"
-  onClick={() => {
-    if (dayResult) {
-      onTradeDayClick(dateKey, dayResult.trades);
-    } else {
-      onEmptyDayClick(dateKey);
-    }
-  }}
-  className={`min-h-24 border-b border-r border-slate-800 p-2 text-left transition focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:min-h-32 sm:p-3 ${dayStyle}`}
-  aria-label={
-    dayResult
-      ? `View ${tradeCount} trades from ${dateKey}`
-      : `Add a trade for ${dateKey}`
-  }
->
+                key={dateKey}
+                type="button"
+                onClick={() => {
+                  if (dayResult) {
+                    onTradeDayClick(dateKey, dayResult.trades);
+                  } else {
+                    onEmptyDayClick(dateKey);
+                  }
+                }}
+                className={`min-h-24 border-b border-r border-slate-800 p-2 text-left transition focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:min-h-32 sm:p-3 ${dayStyle}`}
+                aria-label={
+                  dayResult
+                    ? `View ${tradeCount} trades from ${dateKey}`
+                    : `Add a trade for ${dateKey}`
+                }
+              >
                 <div className="flex items-start justify-between gap-1">
                   <span className="font-semibold text-slate-300">
                     {day}
@@ -208,13 +208,12 @@ if (dayResult && profit < 0) {
                 {dayResult && (
                   <div className="mt-4">
                     <p
-                      className={`text-xs font-bold sm:text-base ${
-                        profit > 0
+                      className={`text-xs font-bold sm:text-base ${profit > 0
                           ? "text-emerald-400"
                           : profit < 0
                             ? "text-red-400"
                             : "text-slate-300"
-                      }`}
+                        }`}
                     >
                       {formatSignedMoney(profit)}
                     </p>

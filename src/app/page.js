@@ -49,14 +49,14 @@ const emptyForm = {
 
 export default function Home() {
   const [trades, setTrades] = useState([]);
-const { user, authLoading } = useAuth();
-const [dataLoading, setDataLoading] = useState(true);
+  const { user, authLoading } = useAuth();
+  const [dataLoading, setDataLoading] = useState(true);
   const [settings, setSettings] = useState({
     startingBalance: "",
     accountInitialized: false,
   });
   const [editingTrade, setEditingTrade] = useState(null);
-const [tradeSubmitting, setTradeSubmitting] = useState(false);
+  const [tradeSubmitting, setTradeSubmitting] = useState(false);
 
   const [form, setForm] = useState(emptyForm);
   const [showTradeModal, setShowTradeModal] = useState(false);
@@ -64,213 +64,213 @@ const [tradeSubmitting, setTradeSubmitting] = useState(false);
   const [settingsBalance, setSettingsBalance] = useState("");
   const [selectedTrade, setSelectedTrade] = useState(null);
   const [selectedDay, setSelectedDay] = useState({
-  date: "",
-  trades: [],
-});
-const [tradeHistoryCollapsed, setTradeHistoryCollapsed] = useState(false);
-const [selectedCalendarMonth, setSelectedCalendarMonth] = useState(() => {
-  const today = new Date();
-
-  return new Date(
-    today.getFullYear(),
-    today.getMonth(),
-    1
-  );
-});
-
-function openEditTrade(trade) {
-  setEditingTrade(trade);
-
-  setForm({
-    ticker: trade.ticker ?? "",
-    date: trade.date ?? "",
-    direction: trade.direction ?? "CALL",
-    entryPrice: String(trade.entryPrice ?? ""),
-    exitPrice: String(trade.exitPrice ?? ""),
-    contracts: String(trade.contracts ?? "1"),
-    fees: String(trade.fees ?? ""),
-    setup: trade.setup ?? "Opening Range Breakout",
-    notes: trade.notes ?? "",
-  });
-
-  setSelectedTrade(null);
-  setShowTradeModal(true);
-}
-
-function openAddTradeForDate(date) {
-  setEditingTrade(null);
-
-  setForm({
-    ...emptyForm,
-    date,
-  });
-
-  setShowTradeModal(true);
-}
-
-function openCalendarTrades(date, dayTrades) {
-  if (dayTrades.length === 1) {
-    setSelectedTrade(dayTrades[0]);
-    return;
-  }
-
-  setSelectedDay({
-    date,
-    trades: dayTrades,
-  });
-}
-
-function selectTradeFromDay(trade) {
-  setSelectedDay({
     date: "",
     trades: [],
   });
+  const [tradeHistoryCollapsed, setTradeHistoryCollapsed] = useState(false);
+  const [selectedCalendarMonth, setSelectedCalendarMonth] = useState(() => {
+    const today = new Date();
 
-  setSelectedTrade(trade);
-}
+    return new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      1
+    );
+  });
 
-useEffect(() => {
-  if (!user) {
-    setTrades([]);
-    setDataLoading(false);
-    return;
+  function openEditTrade(trade) {
+    setEditingTrade(trade);
+
+    setForm({
+      ticker: trade.ticker ?? "",
+      date: trade.date ?? "",
+      direction: trade.direction ?? "CALL",
+      entryPrice: String(trade.entryPrice ?? ""),
+      exitPrice: String(trade.exitPrice ?? ""),
+      contracts: String(trade.contracts ?? "1"),
+      fees: String(trade.fees ?? ""),
+      setup: trade.setup ?? "Opening Range Breakout",
+      notes: trade.notes ?? "",
+    });
+
+    setSelectedTrade(null);
+    setShowTradeModal(true);
   }
 
-  let active = true;
+  function openAddTradeForDate(date) {
+    setEditingTrade(null);
 
-  async function loadUserData() {
-    setDataLoading(true);
+    setForm({
+      ...emptyForm,
+      date,
+    });
 
-    try {
-      await createUserProfile(user);
+    setShowTradeModal(true);
+  }
 
-      const [savedTrades, savedSettings] =
-        await Promise.all([
-          getUserTrades(user.uid),
-          getUserSettings(user.uid),
-        ]);
+  function openCalendarTrades(date, dayTrades) {
+    if (dayTrades.length === 1) {
+      setSelectedTrade(dayTrades[0]);
+      return;
+    }
 
-      if (!active) return;
+    setSelectedDay({
+      date,
+      trades: dayTrades,
+    });
+  }
 
-      setTrades(savedTrades);
+  function selectTradeFromDay(trade) {
+    setSelectedDay({
+      date: "",
+      trades: [],
+    });
 
-      setSettings({
-        startingBalance:
-          savedSettings.startingBalance ?? "",
-        accountInitialized:
-          savedSettings.accountInitialized ?? false,
-      });
-    } catch (error) {
-      console.error("Unable to load user data:", error);
-    } finally {
-      if (active) {
-        setDataLoading(false);
+    setSelectedTrade(trade);
+  }
+
+  useEffect(() => {
+    if (!user) {
+      setTrades([]);
+      setDataLoading(false);
+      return;
+    }
+
+    let active = true;
+
+    async function loadUserData() {
+      setDataLoading(true);
+
+      try {
+        await createUserProfile(user);
+
+        const [savedTrades, savedSettings] =
+          await Promise.all([
+            getUserTrades(user.uid),
+            getUserSettings(user.uid),
+          ]);
+
+        if (!active) return;
+
+        setTrades(savedTrades);
+
+        setSettings({
+          startingBalance:
+            savedSettings.startingBalance ?? "",
+          accountInitialized:
+            savedSettings.accountInitialized ?? false,
+        });
+      } catch (error) {
+        console.error("Unable to load user data:", error);
+      } finally {
+        if (active) {
+          setDataLoading(false);
+        }
       }
     }
-  }
 
-  loadUserData();
+    loadUserData();
 
-  return () => {
-    active = false;
-  };
-}, [user]);
+    return () => {
+      active = false;
+    };
+  }, [user]);
 
-async function saveTrade(event) {
-  event.preventDefault();
+  async function saveTrade(event) {
+    event.preventDefault();
 
-  if (!user || tradeSubmitting) {
-    return;
-  }
+    if (!user || tradeSubmitting) {
+      return;
+    }
 
-  
 
-  const tradeToSave = {
-    ticker: form.ticker.trim().toUpperCase(),
-    date: form.date,
-    direction: form.direction,
-    entryPrice: Number(form.entryPrice),
-    exitPrice: Number(form.exitPrice),
-    contracts: Number(form.contracts),
-    fees: Number(form.fees || 0),
-    setup: form.setup || "",
-    notes: form.notes || "",
-  };
 
-  setTradeSubmitting(true);
+    const tradeToSave = {
+      ticker: form.ticker.trim().toUpperCase(),
+      date: form.date,
+      direction: form.direction,
+      entryPrice: Number(form.entryPrice),
+      exitPrice: Number(form.exitPrice),
+      contracts: Number(form.contracts),
+      fees: Number(form.fees || 0),
+      setup: form.setup || "",
+      notes: form.notes || "",
+    };
 
-  try {
-    if (editingTrade) {
-      await updateUserTrade(
-        user.uid,
-        editingTrade.id,
-        tradeToSave
-      );
+    setTradeSubmitting(true);
 
-      setTrades((currentTrades) =>
-        currentTrades.map((trade) =>
-          trade.id === editingTrade.id
-            ? {
+    try {
+      if (editingTrade) {
+        await updateUserTrade(
+          user.uid,
+          editingTrade.id,
+          tradeToSave
+        );
+
+        setTrades((currentTrades) =>
+          currentTrades.map((trade) =>
+            trade.id === editingTrade.id
+              ? {
                 ...trade,
                 ...tradeToSave,
               }
-            : trade
-        )
-      );
-    } else {
-      const savedTrade = await addUserTrade(
-        user.uid,
-        tradeToSave
-      );
+              : trade
+          )
+        );
+      } else {
+        const savedTrade = await addUserTrade(
+          user.uid,
+          tradeToSave
+        );
 
-      setTrades((currentTrades) => [
-        savedTrade,
-        ...currentTrades,
-      ]);
+        setTrades((currentTrades) => [
+          savedTrade,
+          ...currentTrades,
+        ]);
+      }
+
+      setForm(emptyForm);
+      setEditingTrade(null);
+      setShowTradeModal(false);
+    } catch (error) {
+      console.error(
+        editingTrade
+          ? "Unable to update trade:"
+          : "Unable to save trade:",
+        error
+      );
+    } finally {
+      setTradeSubmitting(false);
     }
-
-    setForm(emptyForm);
-    setEditingTrade(null);
-    setShowTradeModal(false);
-  } catch (error) {
-    console.error(
-      editingTrade
-        ? "Unable to update trade:"
-        : "Unable to save trade:",
-      error
-    );
-  } finally {
-    setTradeSubmitting(false);
   }
-}
 
   async function deleteTrade(tradeId) {
-  if (!user) return;
+    if (!user) return;
 
-  try {
-    await deleteUserTrade(user.uid, tradeId);
+    try {
+      await deleteUserTrade(user.uid, tradeId);
 
-    setTrades((currentTrades) =>
-      currentTrades.filter(
-        (trade) => trade.id !== tradeId
-      )
-    );
-  } catch (error) {
-    console.error("Unable to delete trade:", error);
+      setTrades((currentTrades) =>
+        currentTrades.filter(
+          (trade) => trade.id !== tradeId
+        )
+      );
+    } catch (error) {
+      console.error("Unable to delete trade:", error);
+    }
   }
-}
 
-function openTradeModal() {
-  setEditingTrade(null);
+  function openTradeModal() {
+    setEditingTrade(null);
 
-  setForm({
-    ...emptyForm,
-    date: new Date().toLocaleDateString("en-CA"),
-  });
+    setForm({
+      ...emptyForm,
+      date: new Date().toLocaleDateString("en-CA"),
+    });
 
-  setShowTradeModal(true);
-}
-  
+    setShowTradeModal(true);
+  }
+
 
   function openSettingsModal() {
     setSettingsBalance(settings.startingBalance ?? "");
@@ -278,36 +278,36 @@ function openTradeModal() {
   }
 
   async function saveStartingBalance(event) {
-  event.preventDefault();
+    event.preventDefault();
 
-  if (!user) return;
+    if (!user) return;
 
-  const balance = Number(settingsBalance);
+    const balance = Number(settingsBalance);
 
-  if (!Number.isFinite(balance) || balance < 0) {
-    return;
+    if (!Number.isFinite(balance) || balance < 0) {
+      return;
+    }
+
+    const updatedSettings = {
+      startingBalance: balance,
+      accountInitialized: true,
+    };
+
+    try {
+      await saveUserSettings(
+        user.uid,
+        updatedSettings
+      );
+
+      setSettings(updatedSettings);
+      setShowSettingsModal(false);
+    } catch (error) {
+      console.error(
+        "Unable to save account settings:",
+        error
+      );
+    }
   }
-
-  const updatedSettings = {
-    startingBalance: balance,
-    accountInitialized: true,
-  };
-
-  try {
-    await saveUserSettings(
-      user.uid,
-      updatedSettings
-    );
-
-    setSettings(updatedSettings);
-    setShowSettingsModal(false);
-  } catch (error) {
-    console.error(
-      "Unable to save account settings:",
-      error
-    );
-  }
-}
 
   const netPL = totalProfit(trades);
 
@@ -321,35 +321,35 @@ function openTradeModal() {
   const returnPercentage =
     startingBalance > 0 ? (netPL / startingBalance) * 100 : 0;
 
-    if (authLoading) {
-  return <LoadingScreen message="Checking account..." />;
-}
+  if (authLoading) {
+    return <LoadingScreen message="Checking account..." />;
+  }
 
-if (!user) {
-  return <AuthScreen />;
-}
+  if (!user) {
+    return <AuthScreen />;
+  }
 
-if (dataLoading) {
-  return <LoadingScreen message="Loading trading journal..." />;
-}
-const selectedMonthYear =
-  selectedCalendarMonth.getFullYear();
+  if (dataLoading) {
+    return <LoadingScreen message="Loading trading journal..." />;
+  }
+  const selectedMonthYear =
+    selectedCalendarMonth.getFullYear();
 
-const selectedMonthNumber =
-  selectedCalendarMonth.getMonth();
+  const selectedMonthNumber =
+    selectedCalendarMonth.getMonth();
 
-const selectedMonthTrades = trades.filter((trade) => {
-  if (!trade.date) return false;
+  const selectedMonthTrades = trades.filter((trade) => {
+    if (!trade.date) return false;
 
-  const tradeDate = new Date(
-    `${trade.date}T00:00:00`
-  );
+    const tradeDate = new Date(
+      `${trade.date}T00:00:00`
+    );
 
-  return (
-    tradeDate.getFullYear() === selectedMonthYear &&
-    tradeDate.getMonth() === selectedMonthNumber
-  );
-});
+    return (
+      tradeDate.getFullYear() === selectedMonthYear &&
+      tradeDate.getMonth() === selectedMonthNumber
+    );
+  });
 
 
   return (
@@ -361,11 +361,11 @@ const selectedMonthTrades = trades.filter((trade) => {
               Trading Dashboard
             </p>
 
-           <h1 className="mt-1 text-2xl font-bold sm:text-3xl">
-  {user.displayName
-    ? `${user.displayName}'s Trading Journey`
-    : "My Trading Journey"}
-</h1>
+            <h1 className="mt-1 text-2xl font-bold sm:text-3xl">
+              {user.displayName
+                ? `${user.displayName}'s Trading Journey`
+                : "My Trading Journey"}
+            </h1>
           </div>
 
           <div className="flex items-center gap-3">
@@ -385,12 +385,12 @@ const selectedMonthTrades = trades.filter((trade) => {
               Add Trade
             </button>
             <button
-  type="button"
-  onClick={() => signOut(auth)}
-  className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 font-semibold text-slate-300 transition hover:bg-slate-700 hover:text-white"
->
-  Sign Out
-</button>
+              type="button"
+              onClick={() => signOut(auth)}
+              className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 font-semibold text-slate-300 transition hover:bg-slate-700 hover:text-white"
+            >
+              Sign Out
+            </button>
           </div>
         </div>
       </header>
@@ -457,21 +457,21 @@ const selectedMonthTrades = trades.filter((trade) => {
         </section>
 
         <TradeCalendar
-  trades={trades}
-  currentMonth={selectedCalendarMonth}
-  setCurrentMonth={setSelectedCalendarMonth}
-  onEmptyDayClick={openAddTradeForDate}
-  onTradeDayClick={openCalendarTrades}
-/>
+          trades={trades}
+          currentMonth={selectedCalendarMonth}
+          setCurrentMonth={setSelectedCalendarMonth}
+          onEmptyDayClick={openAddTradeForDate}
+          onTradeDayClick={openCalendarTrades}
+        />
 
         <TradeTable
-  trades={selectedMonthTrades}
-  deleteTrade={deleteTrade}
-  onViewTrade={setSelectedTrade}
-  onEditTrade={openEditTrade}
-  collapsed={tradeHistoryCollapsed}
-  setCollapsed={setTradeHistoryCollapsed}
-/>
+          trades={selectedMonthTrades}
+          deleteTrade={deleteTrade}
+          onViewTrade={setSelectedTrade}
+          onEditTrade={openEditTrade}
+          collapsed={tradeHistoryCollapsed}
+          setCollapsed={setTradeHistoryCollapsed}
+        />
       </div>
 
       {!settings.accountInitialized && (
@@ -493,39 +493,39 @@ const selectedMonthTrades = trades.filter((trade) => {
 
       {showTradeModal && (
         <TradeForm
-         form={form}
-  setForm={setForm}
-  saveTrade={saveTrade}
-  closeModal={() => {
-    setShowTradeModal(false);
-    setEditingTrade(null);
-    setForm(emptyForm);
-  }}
-  isEditing={Boolean(editingTrade)}
-  submitting={tradeSubmitting}
+          form={form}
+          setForm={setForm}
+          saveTrade={saveTrade}
+          closeModal={() => {
+            setShowTradeModal(false);
+            setEditingTrade(null);
+            setForm(emptyForm);
+          }}
+          isEditing={Boolean(editingTrade)}
+          submitting={tradeSubmitting}
         />
       )}
       {selectedDay.trades.length > 0 && (
-  <DayTradesModal
-    date={selectedDay.date}
-    trades={selectedDay.trades}
-    onSelectTrade={selectTradeFromDay}
-    closeModal={() =>
-      setSelectedDay({
-        date: "",
-        trades: [],
-      })
-    }
-  />
-)}
+        <DayTradesModal
+          date={selectedDay.date}
+          trades={selectedDay.trades}
+          onSelectTrade={selectTradeFromDay}
+          closeModal={() =>
+            setSelectedDay({
+              date: "",
+              trades: [],
+            })
+          }
+        />
+      )}
 
-{selectedTrade && (
-  <TradeDetailsModal
-    trade={selectedTrade}
-    closeModal={() => setSelectedTrade(null)}
-    onEditTrade={openEditTrade}
-  />
-)}
+      {selectedTrade && (
+        <TradeDetailsModal
+          trade={selectedTrade}
+          closeModal={() => setSelectedTrade(null)}
+          onEditTrade={openEditTrade}
+        />
+      )}
     </main>
   );
 }
