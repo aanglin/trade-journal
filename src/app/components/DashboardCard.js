@@ -20,7 +20,7 @@ export default function DashboardCard({
 
   if (emphasis) {
     return (
-      <article className="rounded-2xl border border-blue-500/30 bg-gradient-to-br from-blue-950/80 to-slate-900 p-5 shadow-xl shadow-blue-950/20">
+      <article className="rounded-2xl border border-blue-500/30 bg-linear-to-br from-blue-950/80 to-slate-900 p-5 shadow-xl shadow-blue-950/20">
         <p className="text-sm font-medium text-blue-300">{title}</p>
 
         <p className="mt-3 text-3xl font-bold text-white">{value}</p>

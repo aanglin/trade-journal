@@ -45,7 +45,7 @@ export default function TradeTable({
       {!collapsed && (
         <div id="trade-history-content" className="overflow-x-auto">
           {trades.length > 0 ? (
-            <table className="w-full min-w-[1000px] text-left">
+            <table className="w-full min-w-250 text-left">
               <thead className="bg-slate-950/60">
                 <tr className="border-b border-slate-800">
                   <TableHeading>Date</TableHeading>
