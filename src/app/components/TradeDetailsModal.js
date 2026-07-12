@@ -1,11 +1,12 @@
 "use client";
 
-import { calculateProfit } from "@/app/lib/calculations";
+import { calculateProfit, calculateCommission } from "@/app/lib/calculations";
 
 export default function TradeDetailsModal({ trade, closeModal, onEditTrade }) {
   if (!trade) return null;
 
   const profit = calculateProfit(trade);
+const commission = calculateCommission(trade);
 
   return (
     <div
@@ -66,9 +67,9 @@ export default function TradeDetailsModal({ trade, closeModal, onEditTrade }) {
 
             <Detail label="Contracts" value={trade.contracts} />
 
-            <Detail
-              label="Option Commission"
-              value={formatMoney(trade.commission || 0)}
+           <Detail
+                label="Automatic Commission"
+                value={formatMoney(commission)}
             />
 
             <Detail

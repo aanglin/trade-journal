@@ -1,15 +1,30 @@
 // src/lib/calculations.js
 
 export function calculateProfit(trade) {
-  const entry = Number(trade.entryPrice);
-  const exit = Number(trade.exitPrice);
-  const contracts = Number(trade.contracts);
-  const commission = Number(trade.commission || 0);
-  const fees = Number(trade.fees || 0);
+  const entry = Number(trade.entryPrice || 0);
+  const exit = Number(trade.exitPrice || 0);
+  const contracts = Number(trade.contracts || 0);
+  const otherFees = Number(trade.fees || 0);
 
-  const grossProfit = (exit - entry) * 100 * contracts;
+  const grossProfit =
+    (exit - entry) * 100 * contracts;
 
-  return grossProfit - commission - fees;
+  const commission = calculateCommission(trade);
+
+  return grossProfit - commission - otherFees;
+}
+
+export const COMMISSION_PER_CONTRACT = 0.65;
+export const OPTION_TRADE_SIDES = 2;
+
+export function calculateCommission(trade) {
+  const contracts = Number(trade.contracts || 0);
+
+  return (
+    contracts *
+    COMMISSION_PER_CONTRACT *
+    OPTION_TRADE_SIDES
+  );
 }
 
 export function totalProfit(trades) {

@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
+import {
+  calculateCommission,
+  COMMISSION_PER_CONTRACT,
+} from "@/app/lib/calculations";
 
 const inputClass =
   "w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20";
@@ -43,6 +47,10 @@ export default function TradeForm({
       closeModal();
     }
   }
+
+  const automaticCommission = calculateCommission({
+  contracts: form.contracts,
+});
 
   return (
     <div
@@ -149,18 +157,28 @@ export default function TradeForm({
             />
           </FormField>
 
-          <FormField label="Option Commission">
-            <input
-              className={inputClass}
-              name="commission"
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="1.30"
-              value={form.commission ?? ""}
-              onChange={handleChange}
-            />
-          </FormField>
+          <FormField label="Automatic Commission">
+  <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
+    <div className="flex items-center justify-between">
+      <span className="text-sm text-slate-400">
+        ${COMMISSION_PER_CONTRACT.toFixed(2)} per contract,
+        each side
+      </span>
+
+      <span className="font-bold text-blue-400">
+        ${automaticCommission.toFixed(2)}
+      </span>
+    </div>
+
+    <p className="mt-1 text-xs text-slate-500">
+      Based on {Number(form.contracts || 0)}{" "}
+      {Number(form.contracts) === 1
+        ? "contract"
+        : "contracts"}{" "}
+      for opening and closing the trade.
+    </p>
+  </div>
+</FormField>
 
           <FormField label="Other Fees">
             <input
