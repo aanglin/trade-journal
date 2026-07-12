@@ -67,6 +67,7 @@ const [tradeSubmitting, setTradeSubmitting] = useState(false);
   date: "",
   trades: [],
 });
+const [tradeHistoryCollapsed, setTradeHistoryCollapsed] = useState(false);
 
 function openEditTrade(trade) {
   setEditingTrade(trade);
@@ -172,6 +173,8 @@ async function saveTrade(event) {
   if (!user || tradeSubmitting) {
     return;
   }
+
+  
 
   const tradeToSave = {
     ticker: form.ticker.trim().toUpperCase(),
@@ -321,6 +324,7 @@ if (dataLoading) {
   return <LoadingScreen message="Loading trading journal..." />;
 }
 
+
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100">
       <header className="border-b border-slate-800 bg-slate-950/95 backdrop-blur">
@@ -435,6 +439,8 @@ if (dataLoading) {
           deleteTrade={deleteTrade}
           onViewTrade={setSelectedTrade}
           onEditTrade={openEditTrade}
+          collapsed={tradeHistoryCollapsed}
+          setCollapsed={setTradeHistoryCollapsed}
         />
       </div>
 

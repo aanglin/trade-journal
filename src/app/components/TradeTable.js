@@ -7,141 +7,165 @@ export default function TradeTable({
   deleteTrade,
   onViewTrade,
   onEditTrade,
+  collapsed,
+  setCollapsed,
 }) {
   return (
-    <section className="rounded-2xl border border-slate-800 bg-slate-900 shadow-xl shadow-black/10">
-      <div className="border-b border-slate-800 px-6 py-5">
-        <h2 className="text-xl font-bold text-white">
-          Trade History
-        </h2>
+    <section className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 shadow-xl shadow-black/10">
+      <button
+        type="button"
+        onClick={() => setCollapsed((currentValue) => !currentValue)}
+        className={`flex w-full items-center justify-between px-6 py-5 text-left transition hover:bg-slate-800/40 ${
+          collapsed ? "" : "border-b border-slate-800"
+        }`}
+        aria-expanded={!collapsed}
+        aria-controls="trade-history-content"
+      >
+        <div>
+          <h2 className="text-xl font-bold text-white">
+            Trade History
+          </h2>
 
-        <p className="mt-1 text-sm text-slate-400">
-          Review your saved trades and journal notes.
-        </p>
-      </div>
+          <p className="mt-1 text-sm text-slate-400">
+            {trades.length}{" "}
+            {trades.length === 1 ? "trade" : "trades"}
+          </p>
+        </div>
 
-      <div className="overflow-x-auto">
-        {trades.length > 0 ? (
-          <table className="w-full min-w-[900px] text-left">
-            <thead className="bg-slate-950/60">
-              <tr className="border-b border-slate-800">
-                <TableHeading>Date</TableHeading>
-                <TableHeading>Ticker</TableHeading>
-                <TableHeading>Type</TableHeading>
-                <TableHeading>Setup</TableHeading>
-                <TableHeading>Entry</TableHeading>
-                <TableHeading>Exit</TableHeading>
-                <TableHeading>Contracts</TableHeading>
-                <TableHeading>P/L</TableHeading>
-                <TableHeading>Actions</TableHeading>
-              </tr>
-            </thead>
+        <span
+          className={`text-2xl text-slate-400 transition-transform duration-200 ${
+            collapsed ? "-rotate-90" : "rotate-0"
+          }`}
+          aria-hidden="true"
+        >
+          ▼
+        </span>
+      </button>
 
-            <tbody>
-              {trades.map((trade) => {
-                const profit = calculateProfit(trade);
+      {!collapsed && (
+        <div id="trade-history-content" className="overflow-x-auto">
+          {trades.length > 0 ? (
+            <table className="w-full min-w-[1000px] text-left">
+              <thead className="bg-slate-950/60">
+                <tr className="border-b border-slate-800">
+                  <TableHeading>Date</TableHeading>
+                  <TableHeading>Ticker</TableHeading>
+                  <TableHeading>Type</TableHeading>
+                  <TableHeading>Setup</TableHeading>
+                  <TableHeading>Entry</TableHeading>
+                  <TableHeading>Exit</TableHeading>
+                  <TableHeading>Contracts</TableHeading>
+                  <TableHeading>P/L</TableHeading>
+                  <TableHeading>Actions</TableHeading>
+                </tr>
+              </thead>
 
-                return (
-                  <tr
-                    key={trade.id}
-                    className="border-b border-slate-800 transition last:border-b-0 hover:bg-slate-800/70"
-                  >
-                    <TableCell>
-                      {formatDate(trade.date)}
-                    </TableCell>
+              <tbody>
+                {trades.map((trade) => {
+                  const profit = calculateProfit(trade);
 
-                    <TableCell>
-                      <span className="font-bold text-white">
-                        {trade.ticker || "—"}
-                      </span>
-                    </TableCell>
+                  return (
+                    <tr
+                      key={trade.id}
+                      className="border-b border-slate-800 transition last:border-b-0 hover:bg-slate-800/70"
+                    >
+                      <TableCell>
+                        {formatDate(trade.date)}
+                      </TableCell>
 
-                    <TableCell>
-                      <span
-                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                          trade.direction === "CALL"
-                            ? "bg-emerald-500/10 text-emerald-400"
-                            : "bg-red-500/10 text-red-400"
-                        }`}
-                      >
-                        {trade.direction || "—"}
-                      </span>
-                    </TableCell>
+                      <TableCell>
+                        <span className="font-bold text-white">
+                          {trade.ticker || "—"}
+                        </span>
+                      </TableCell>
 
-                    <TableCell>
-                      {trade.setup || "Not specified"}
-                    </TableCell>
-
-                    <TableCell>
-                      {formatMoney(trade.entryPrice)}
-                    </TableCell>
-
-                    <TableCell>
-                      {formatMoney(trade.exitPrice)}
-                    </TableCell>
-
-                    <TableCell>
-                      {trade.contracts || 0}
-                    </TableCell>
-
-                    <TableCell>
-                      <span
-                        className={`font-bold ${
-                          profit > 0
-                            ? "text-emerald-400"
-                            : profit < 0
-                              ? "text-red-400"
-                              : "text-slate-300"
-                        }`}
-                      >
-                        {formatSignedMoney(profit)}
-                      </span>
-                    </TableCell>
-
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => onViewTrade(trade)}
-                          className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-700 hover:text-white"
+                      <TableCell>
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                            trade.direction === "CALL"
+                              ? "bg-emerald-500/10 text-emerald-400"
+                              : "bg-red-500/10 text-red-400"
+                          }`}
                         >
-                          View
-                        </button>
+                          {trade.direction || "—"}
+                        </span>
+                      </TableCell>
 
+                      <TableCell>
+                        {trade.setup || "Not specified"}
+                      </TableCell>
 
-<button
-  type="button"
-  onClick={() => onEditTrade(trade)}
-  className="rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-2 text-sm font-medium text-blue-400 transition hover:bg-blue-500/20"
->
-  Edit
-</button>
-                        <button
-                          type="button"
-                          onClick={() => deleteTrade(trade.id)}
-                          className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-400 transition hover:bg-red-500/20"
+                      <TableCell>
+                        {formatMoney(trade.entryPrice)}
+                      </TableCell>
+
+                      <TableCell>
+                        {formatMoney(trade.exitPrice)}
+                      </TableCell>
+
+                      <TableCell>
+                        {trade.contracts || 0}
+                      </TableCell>
+
+                      <TableCell>
+                        <span
+                          className={`font-bold ${
+                            profit > 0
+                              ? "text-emerald-400"
+                              : profit < 0
+                                ? "text-red-400"
+                                : "text-slate-300"
+                          }`}
                         >
-                          Delete
-                        </button>
-                      </div>
-                    </TableCell>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        ) : (
-          <div className="px-6 py-14 text-center">
-            <p className="text-lg font-semibold text-slate-300">
-              No trades added yet
-            </p>
+                          {formatSignedMoney(profit)}
+                        </span>
+                      </TableCell>
 
-            <p className="mt-1 text-sm text-slate-500">
-              Add your first trade to begin tracking your results.
-            </p>
-          </div>
-        )}
-      </div>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => onViewTrade(trade)}
+                            className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-700 hover:text-white"
+                          >
+                            View
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => onEditTrade(trade)}
+                            className="rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-2 text-sm font-medium text-blue-400 transition hover:bg-blue-500/20"
+                          >
+                            Edit
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => deleteTrade(trade.id)}
+                            className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-400 transition hover:bg-red-500/20"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </TableCell>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          ) : (
+            <div className="px-6 py-14 text-center">
+              <p className="text-lg font-semibold text-slate-300">
+                No trades added yet
+              </p>
+
+              <p className="mt-1 text-sm text-slate-500">
+                Add your first trade to begin tracking your results.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
     </section>
   );
 }
