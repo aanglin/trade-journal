@@ -323,6 +323,20 @@ if (!user) {
 if (dataLoading) {
   return <LoadingScreen message="Loading trading journal..." />;
 }
+const currentDate = new Date();
+const currentYear = currentDate.getFullYear();
+const currentMonth = currentDate.getMonth();
+
+const currentMonthTrades = trades.filter((trade) => {
+  if (!trade.date) return false;
+
+  const tradeDate = new Date(`${trade.date}T00:00:00`);
+
+  return (
+    tradeDate.getFullYear() === currentYear &&
+    tradeDate.getMonth() === currentMonth
+  );
+});
 
 
   return (
@@ -435,7 +449,7 @@ if (dataLoading) {
      />
 
         <TradeTable
-          trades={trades}
+          trades={currentMonthTrades}
           deleteTrade={deleteTrade}
           onViewTrade={setSelectedTrade}
           onEditTrade={openEditTrade}
