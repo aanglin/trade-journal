@@ -8,13 +8,13 @@ export default function TradeTable({
   onViewTrade,
   onEditTrade,
   collapsed,
-  setCollapsed,
+  onToggleCollapsed,
 }) {
   return (
     <section className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 shadow-xl shadow-black/10">
       <button
         type="button"
-        onClick={() => setCollapsed((currentValue) => !currentValue)}
+        onClick={onToggleCollapsed}
         className={`flex w-full items-center justify-between px-6 py-5 text-left transition hover:bg-slate-800/40 ${
           collapsed ? "" : "border-b border-slate-800"
         }`}

@@ -55,6 +55,7 @@ export async function getUserSettings(userId) {
     return {
       startingBalance: "",
       accountInitialized: false,
+      tradeHistoryCollapsed: false,
     };
   }
 
@@ -62,15 +63,13 @@ export async function getUserSettings(userId) {
 
   return {
     startingBalance: data.startingBalance ?? "",
-    accountInitialized:
-      data.accountInitialized ?? false,
+    accountInitialized: data.accountInitialized ?? false,
+    tradeHistoryCollapsed:
+      data.tradeHistoryCollapsed ?? false,
   };
 }
 
-export async function saveUserSettings(
-  userId,
-  settings
-) {
+export async function saveUserSettings(userId, settings) {
   requireUserId(userId);
 
   const userReference = doc(db, "users", userId);
@@ -80,8 +79,13 @@ export async function saveUserSettings(
     {
       startingBalance:
         Number(settings.startingBalance) || 0,
+
       accountInitialized:
         Boolean(settings.accountInitialized),
+
+      tradeHistoryCollapsed:
+        Boolean(settings.tradeHistoryCollapsed),
+
       updatedAt: serverTimestamp(),
     },
     {

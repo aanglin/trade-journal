@@ -54,6 +54,7 @@ export default function Home() {
   const [settings, setSettings] = useState({
     startingBalance: "",
     accountInitialized: false,
+    tradeHistoryCollapsed: false,
   });
   const [editingTrade, setEditingTrade] = useState(null);
   const [tradeSubmitting, setTradeSubmitting] = useState(false);
@@ -77,6 +78,41 @@ export default function Home() {
       1
     );
   });
+
+  async function toggleTradeHistory() {
+  if (!user) return;
+
+  const nextCollapsed = !tradeHistoryCollapsed;
+
+  const updatedSettings = {
+    ...settings,
+    tradeHistoryCollapsed: nextCollapsed,
+  };
+
+  // Update the screen immediately.
+  setTradeHistoryCollapsed(nextCollapsed);
+  setSettings(updatedSettings);
+
+  try {
+    await saveUserSettings(
+      user.uid,
+      updatedSettings
+    );
+  } catch (error) {
+    console.error(
+      "Unable to save trade history preference:",
+      error
+    );
+
+    // Undo the visual change if Firestore fails.
+    setTradeHistoryCollapsed(!nextCollapsed);
+
+    setSettings((currentSettings) => ({
+      ...currentSettings,
+      tradeHistoryCollapsed: !nextCollapsed,
+    }));
+  }
+}
 
   function openEditTrade(trade) {
     setEditingTrade(trade);
@@ -155,11 +191,19 @@ export default function Home() {
         setTrades(savedTrades);
 
         setSettings({
-          startingBalance:
-            savedSettings.startingBalance ?? "",
-          accountInitialized:
-            savedSettings.accountInitialized ?? false,
-        });
+  startingBalance:
+    savedSettings.startingBalance ?? "",
+
+  accountInitialized:
+    savedSettings.accountInitialized ?? false,
+
+  tradeHistoryCollapsed:
+    savedSettings.tradeHistoryCollapsed ?? false,
+});
+
+setTradeHistoryCollapsed(
+  savedSettings.tradeHistoryCollapsed ?? false
+);
       } catch (error) {
         console.error("Unable to load user data:", error);
       } finally {
@@ -291,6 +335,7 @@ export default function Home() {
     const updatedSettings = {
       startingBalance: balance,
       accountInitialized: true,
+      tradeHistoryCollapsed,
     };
 
     try {
@@ -465,13 +510,13 @@ export default function Home() {
         />
 
         <TradeTable
-          trades={selectedMonthTrades}
-          deleteTrade={deleteTrade}
-          onViewTrade={setSelectedTrade}
-          onEditTrade={openEditTrade}
-          collapsed={tradeHistoryCollapsed}
-          setCollapsed={setTradeHistoryCollapsed}
-        />
+  trades={selectedMonthTrades}
+  deleteTrade={deleteTrade}
+  onViewTrade={setSelectedTrade}
+  onEditTrade={openEditTrade}
+  collapsed={tradeHistoryCollapsed}
+  onToggleCollapsed={toggleTradeHistory}
+/>
       </div>
 
       {!settings.accountInitialized && (
