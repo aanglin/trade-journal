@@ -186,7 +186,7 @@ export default function TradeCalendar({
                     onEmptyDayClick(dateKey);
                   }
                 }}
-                className={`min-h-24 border-b border-r border-slate-800 p-2 text-left transition focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:min-h-32 sm:p-3 ${dayStyle}`}
+                className={`min-h-24 border-b border-r border-slate-800 p-1.5 text-left transition focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:min-h-32 sm:p-3 ${dayStyle}`}
                 aria-label={
                   dayResult
                     ? `View ${tradeCount} trades from ${dateKey}`
@@ -199,7 +199,7 @@ export default function TradeCalendar({
                   </span>
 
                   {tradeCount > 0 && (
-                    <span className="rounded-full bg-black/20 px-2 py-0.5 text-[10px] text-slate-300 sm:text-xs">
+                    <span className="rounded-full bg-black/20 px-1.5 py-0.5 text-[9px] text-slate-300 sm:px-2 sm:text-xs">
                       {tradeCount}
                     </span>
                   )}
@@ -207,16 +207,17 @@ export default function TradeCalendar({
 
                 {dayResult && (
                   <div className="mt-4">
-                    <p
-                      className={`text-xs font-bold sm:text-base ${profit > 0
-                          ? "text-emerald-400"
-                          : profit < 0
-                            ? "text-red-400"
-                            : "text-slate-300"
-                        }`}
-                    >
-                      {formatSignedMoney(profit)}
-                    </p>
+                   <p
+  className={`break-words text-[10px] font-bold leading-tight sm:text-sm md:text-base ${
+    profit > 0
+      ? "text-emerald-300"
+      : profit < 0
+        ? "text-red-300"
+        : "text-slate-300"
+  }`}
+>
+  {formatCompactMoney(profit)}
+</p>
 
                     <p className="mt-1 hidden text-xs text-slate-400 sm:block">
                       {tradeCount}{" "}
@@ -270,6 +271,31 @@ function CalendarKey({ className, label }) {
       <span>{label}</span>
     </div>
   );
+}
+
+function formatCompactMoney(amount) {
+  const number = Number(amount || 0);
+  const absoluteAmount = Math.abs(number);
+
+  let formatted;
+
+  if (absoluteAmount >= 1000000) {
+    formatted = `$${(absoluteAmount / 1000000).toFixed(1)}M`;
+  } else if (absoluteAmount >= 1000) {
+    formatted = `$${(absoluteAmount / 1000).toFixed(1)}K`;
+  } else {
+    formatted = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(absoluteAmount);
+  }
+
+  if (number > 0) return `+${formatted}`;
+  if (number < 0) return `-${formatted}`;
+
+  return formatted;
 }
 
 function formatSignedMoney(amount) {
