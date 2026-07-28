@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { signOut } from "firebase/auth";
 
 import DashboardCard from "@/app/components/DashboardCard";
@@ -163,64 +163,6 @@ export default function Home() {
     active = false;
   };
 }, [user]);
-  //   if (!user) {
-  //     setTrades([]);
-  //     setSettings(defaultSettings);
-  //     setTradeHistoryCollapsed(false);
-  //     setDataLoading(false);
-  //     return undefined;
-  //   }
-
-  //   let active = true;
-
-  //   async function loadUserData() {
-  //     setDataLoading(true);
-  //     clearNotice();
-
-  //     try {
-  //       await createUserProfile(user);
-
-  //       const [savedTrades, savedSettings] = await Promise.all([
-  //         getUserTrades(user.uid),
-  //         getUserSettings(user.uid),
-  //       ]);
-
-  //       if (!active) return;
-
-  //       const loadedSettings = {
-  //         startingBalance: savedSettings.startingBalance ?? "",
-  //         accountInitialized: savedSettings.accountInitialized ?? false,
-  //         tradeHistoryCollapsed:
-  //           savedSettings.tradeHistoryCollapsed ?? false,
-  //       };
-
-  //       setTrades(savedTrades);
-  //       setSettings(loadedSettings);
-  //       setSettingsBalance(loadedSettings.startingBalance);
-  //       setTradeHistoryCollapsed(loadedSettings.tradeHistoryCollapsed);
-  //     } catch (error) {
-  //       console.error("Unable to load user data:", error);
-
-  //       if (active) {
-  //         showNotice(
-  //           "error",
-  //           "Your trading journal could not be loaded. Please refresh and try again."
-  //         );
-  //       }
-  //     } finally {
-  //       if (active) {
-  //         setDataLoading(false);
-  //       }
-  //     }
-  //   }
-
-  //   loadUserData();
-
-  //   return () => {
-  //     active = false;
-  //   };
-  // }, [user]);
-
   const dashboardMetrics = useMemo(() => {
     const startingBalance = Number(settings.startingBalance || 0);
     const netPL = totalProfit(trades);
@@ -273,11 +215,11 @@ export default function Home() {
     });
   }
 
-  function closeTradeModal() {
-    setShowTradeModal(false);
-    setEditingTrade(null);
-    setForm(emptyForm);
-  }
+  const closeTradeModal = useCallback(() => {
+  setShowTradeModal(false);
+  setEditingTrade(null);
+  setForm(emptyForm);
+}, []);
 
   function openTradeModal() {
     setEditingTrade(null);
