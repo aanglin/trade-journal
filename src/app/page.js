@@ -100,63 +100,126 @@ export default function Home() {
   }, [notice]);
 
   useEffect(() => {
-    if (!user) {
-      setTrades([]);
-      setSettings(defaultSettings);
-      setTradeHistoryCollapsed(false);
-      setDataLoading(false);
-      return undefined;
-    }
+  if (!user) {
+    return undefined;
+  }
 
-    let active = true;
+  let active = true;
 
-    async function loadUserData() {
-      setDataLoading(true);
-      clearNotice();
+  async function loadUserData() {
+    try {
+      await createUserProfile(user);
 
-      try {
-        await createUserProfile(user);
-
-        const [savedTrades, savedSettings] = await Promise.all([
+      const [savedTrades, savedSettings] =
+        await Promise.all([
           getUserTrades(user.uid),
           getUserSettings(user.uid),
         ]);
 
-        if (!active) return;
+      if (!active) return;
 
-        const loadedSettings = {
-          startingBalance: savedSettings.startingBalance ?? "",
-          accountInitialized: savedSettings.accountInitialized ?? false,
-          tradeHistoryCollapsed:
-            savedSettings.tradeHistoryCollapsed ?? false,
-        };
+      const loadedSettings = {
+        startingBalance:
+          savedSettings.startingBalance ?? "",
 
-        setTrades(savedTrades);
-        setSettings(loadedSettings);
-        setSettingsBalance(loadedSettings.startingBalance);
-        setTradeHistoryCollapsed(loadedSettings.tradeHistoryCollapsed);
-      } catch (error) {
-        console.error("Unable to load user data:", error);
+        accountInitialized:
+          savedSettings.accountInitialized ?? false,
 
-        if (active) {
-          showNotice(
-            "error",
-            "Your trading journal could not be loaded. Please refresh and try again."
-          );
-        }
-      } finally {
-        if (active) {
-          setDataLoading(false);
-        }
+        tradeHistoryCollapsed:
+          savedSettings.tradeHistoryCollapsed ?? false,
+      };
+
+      setTrades(savedTrades);
+      setSettings(loadedSettings);
+      setSettingsBalance(
+        loadedSettings.startingBalance
+      );
+      setTradeHistoryCollapsed(
+        loadedSettings.tradeHistoryCollapsed
+      );
+    } catch (error) {
+      console.error(
+        "Unable to load user data:",
+        error
+      );
+
+      if (!active) return;
+
+      setNotice({
+        type: "error",
+        message:
+          "Your trading journal could not be loaded. Please refresh and try again.",
+      });
+    } finally {
+      if (active) {
+        setDataLoading(false);
       }
     }
+  }
 
-    loadUserData();
+  loadUserData();
 
-    return () => {
-      active = false;
-    };
-  }, [user]);
+  return () => {
+    active = false;
+  };
+}, [user]);
+  //   if (!user) {
+  //     setTrades([]);
+  //     setSettings(defaultSettings);
+  //     setTradeHistoryCollapsed(false);
+  //     setDataLoading(false);
+  //     return undefined;
+  //   }
+
+  //   let active = true;
+
+  //   async function loadUserData() {
+  //     setDataLoading(true);
+  //     clearNotice();
+
+  //     try {
+  //       await createUserProfile(user);
+
+  //       const [savedTrades, savedSettings] = await Promise.all([
+  //         getUserTrades(user.uid),
+  //         getUserSettings(user.uid),
+  //       ]);
+
+  //       if (!active) return;
+
+  //       const loadedSettings = {
+  //         startingBalance: savedSettings.startingBalance ?? "",
+  //         accountInitialized: savedSettings.accountInitialized ?? false,
+  //         tradeHistoryCollapsed:
+  //           savedSettings.tradeHistoryCollapsed ?? false,
+  //       };
+
+  //       setTrades(savedTrades);
+  //       setSettings(loadedSettings);
+  //       setSettingsBalance(loadedSettings.startingBalance);
+  //       setTradeHistoryCollapsed(loadedSettings.tradeHistoryCollapsed);
+  //     } catch (error) {
+  //       console.error("Unable to load user data:", error);
+
+  //       if (active) {
+  //         showNotice(
+  //           "error",
+  //           "Your trading journal could not be loaded. Please refresh and try again."
+  //         );
+  //       }
+  //     } finally {
+  //       if (active) {
+  //         setDataLoading(false);
+  //       }
+  //     }
+  //   }
+
+  //   loadUserData();
+
+  //   return () => {
+  //     active = false;
+  //   };
+  // }, [user]);
 
   const dashboardMetrics = useMemo(() => {
     const startingBalance = Number(settings.startingBalance || 0);
@@ -284,15 +347,25 @@ export default function Home() {
   }
 
   async function handleSignOut() {
-    clearNotice();
+  clearNotice();
+  setDataLoading(true);
 
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error("Unable to sign out:", error);
-      showNotice("error", "You could not be signed out. Please try again.");
-    }
+  try {
+    await signOut(auth);
+  } catch (error) {
+    console.error(
+      "Unable to sign out:",
+      error
+    );
+
+    setDataLoading(false);
+
+    showNotice(
+      "error",
+      "You could not be signed out. Please try again."
+    );
   }
+}
 
   async function toggleTradeHistory() {
     if (!user) return;
