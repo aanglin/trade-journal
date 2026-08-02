@@ -209,25 +209,43 @@ const dashboardMetrics = useMemo(() => {
   );
 
   const allTimeNetPL = totalProfit(trades);
-  const scopedNetPL = totalProfit(statsTrades);
+  const selectedMonthNetPL = totalProfit(
+    selectedMonthTrades
+  );
 
-  const scopedResults = statsTrades.map((trade) =>
+  const allTimeResults = trades.map((trade) =>
     calculateProfit(trade)
   );
 
-  const bestTrade =
-    scopedResults.length > 0
-      ? Math.max(...scopedResults)
+  const selectedMonthResults =
+    selectedMonthTrades.map((trade) =>
+      calculateProfit(trade)
+    );
+
+  const allTimeBestTrade =
+    allTimeResults.length > 0
+      ? Math.max(...allTimeResults)
       : 0;
 
-  const worstTrade =
-    scopedResults.length > 0
-      ? Math.min(...scopedResults)
+  const allTimeWorstTrade =
+    allTimeResults.length > 0
+      ? Math.min(...allTimeResults)
       : 0;
 
-  const averageTrade =
-    statsTrades.length > 0
-      ? scopedNetPL / statsTrades.length
+  const selectedMonthBestTrade =
+    selectedMonthResults.length > 0
+      ? Math.max(...selectedMonthResults)
+      : 0;
+
+  const selectedMonthWorstTrade =
+    selectedMonthResults.length > 0
+      ? Math.min(...selectedMonthResults)
+      : 0;
+
+  const selectedMonthAverageTrade =
+    selectedMonthTrades.length > 0
+      ? selectedMonthNetPL /
+        selectedMonthTrades.length
       : 0;
 
   return {
@@ -236,55 +254,51 @@ const dashboardMetrics = useMemo(() => {
       trades
     ),
 
-    allTimeNetPL,
-    scopedNetPL,
-
-    todayPL: profitByPeriod(
-      trades,
-      "today"
-    ),
-
-    weekPL: profitByPeriod(
-      trades,
-      "week"
-    ),
-
-    monthPL: profitByPeriod(
-      trades,
-      "month"
-    ),
-
-    averageWeeklyPL: calculateAverageWeeklyPL(
-  selectedMonthTrades,
-  selectedCalendarMonth
-),
-
     returnPercentage:
       startingBalance > 0
-        ? (allTimeNetPL / startingBalance) *
-          100
+        ? (allTimeNetPL / startingBalance) * 100
         : 0,
 
-    winRate: winRate(statsTrades),
-    totalTrades: statsTrades.length,
+    allTime: {
+      netPL: allTimeNetPL,
+      bestTrade: allTimeBestTrade,
+      worstTrade: allTimeWorstTrade,
+      monthPL: profitByPeriod(
+        trades,
+        "month"
+      ),
+      winRate: winRate(trades),
+      totalTrades: trades.length,
+      averageWinner: averageWinner(trades),
+      averageLoser: averageLoser(trades),
+      profitFactor: profitFactor(trades),
+    },
 
-    averageTrade,
-    averageWinner:
-      averageWinner(statsTrades),
-
-    averageLoser:
-      averageLoser(statsTrades),
-
-    bestTrade,
-    worstTrade,
-
-    profitFactor:
-      profitFactor(statsTrades),
+    selectedMonth: {
+      netPL: selectedMonthNetPL,
+      averageTrade:
+        selectedMonthAverageTrade,
+      bestTrade:
+        selectedMonthBestTrade,
+      worstTrade:
+        selectedMonthWorstTrade,
+      winRate: winRate(selectedMonthTrades),
+      totalTrades:
+        selectedMonthTrades.length,
+      averageWinner:
+        averageWinner(selectedMonthTrades),
+      averageLoser:
+        averageLoser(selectedMonthTrades),
+      averageWeeklyPL:
+        calculateAverageWeeklyPL(
+          selectedMonthTrades,
+          selectedCalendarMonth
+        ),
+    },
   };
 }, [
   settings.startingBalance,
   trades,
-  statsTrades,
   selectedMonthTrades,
   selectedCalendarMonth,
 ]);
@@ -709,35 +723,80 @@ const dashboardMetrics = useMemo(() => {
       <DashboardCard
         title="Net Profit/Loss"
         value={formatSignedMoney(
-          dashboardMetrics.allTimeNetPL
+          dashboardMetrics.allTime.netPL
         )}
         profit={
-          dashboardMetrics.allTimeNetPL
+          dashboardMetrics.allTime.netPL
         }
       />
 
       <DashboardCard
-        title="Today's P/L"
+        title="Best Trade"
         value={formatSignedMoney(
-          dashboardMetrics.todayPL
+          dashboardMetrics.allTime.bestTrade
         )}
-        profit={dashboardMetrics.todayPL}
+        profit={
+          dashboardMetrics.allTime.bestTrade
+        }
       />
 
       <DashboardCard
-        title="This Week"
+        title="Worst Trade"
         value={formatSignedMoney(
-          dashboardMetrics.weekPL
+          dashboardMetrics.allTime.worstTrade
         )}
-        profit={dashboardMetrics.weekPL}
+        profit={
+          dashboardMetrics.allTime.worstTrade
+        }
       />
 
       <DashboardCard
         title="This Month"
         value={formatSignedMoney(
-          dashboardMetrics.monthPL
+          dashboardMetrics.allTime.monthPL
         )}
-        profit={dashboardMetrics.monthPL}
+        profit={
+          dashboardMetrics.allTime.monthPL
+        }
+      />
+
+      <DashboardCard
+        title="Win Rate"
+        value={`${dashboardMetrics.allTime.winRate}%`}
+      />
+
+      <DashboardCard
+        title="Total Trades"
+        value={
+          dashboardMetrics.allTime.totalTrades
+        }
+      />
+
+      <DashboardCard
+        title="Average Winner"
+        value={formatMoney(
+          dashboardMetrics.allTime.averageWinner
+        )}
+        profit={
+          dashboardMetrics.allTime.averageWinner
+        }
+      />
+
+      <DashboardCard
+        title="Average Loser"
+        value={formatMoney(
+          dashboardMetrics.allTime.averageLoser
+        )}
+        profit={
+          dashboardMetrics.allTime.averageLoser
+        }
+      />
+
+      <DashboardCard
+        title="Profit Factor"
+        value={formatProfitFactor(
+          dashboardMetrics.allTime.profitFactor
+        )}
       />
     </>
   ) : (
@@ -745,89 +804,99 @@ const dashboardMetrics = useMemo(() => {
       <DashboardCard
         title={`${selectedMonthLabel} P/L`}
         value={formatSignedMoney(
-          dashboardMetrics.scopedNetPL
+          dashboardMetrics.selectedMonth.netPL
         )}
         profit={
-          dashboardMetrics.scopedNetPL
+          dashboardMetrics.selectedMonth.netPL
         }
       />
 
       <DashboardCard
         title="Average Trade"
         value={formatSignedMoney(
-          dashboardMetrics.averageTrade
+          dashboardMetrics.selectedMonth
+            .averageTrade
         )}
         profit={
-          dashboardMetrics.averageTrade
+          dashboardMetrics.selectedMonth
+            .averageTrade
         }
       />
 
       <DashboardCard
         title="Best Trade"
         value={formatSignedMoney(
-          dashboardMetrics.bestTrade
+          dashboardMetrics.selectedMonth
+            .bestTrade
         )}
-        profit={dashboardMetrics.bestTrade}
+        profit={
+          dashboardMetrics.selectedMonth
+            .bestTrade
+        }
       />
 
       <DashboardCard
         title="Worst Trade"
         value={formatSignedMoney(
-          dashboardMetrics.worstTrade
+          dashboardMetrics.selectedMonth
+            .worstTrade
         )}
-        profit={dashboardMetrics.worstTrade}
+        profit={
+          dashboardMetrics.selectedMonth
+            .worstTrade
+        }
+      />
+
+      <DashboardCard
+        title="Win Rate"
+        value={`${dashboardMetrics.selectedMonth.winRate}%`}
+      />
+
+      <DashboardCard
+        title="Total Trades"
+        value={
+          dashboardMetrics.selectedMonth
+            .totalTrades
+        }
+      />
+
+      <DashboardCard
+        title="Average Winner"
+        value={formatMoney(
+          dashboardMetrics.selectedMonth
+            .averageWinner
+        )}
+        profit={
+          dashboardMetrics.selectedMonth
+            .averageWinner
+        }
+      />
+
+      <DashboardCard
+        title="Average Loser"
+        value={formatMoney(
+          dashboardMetrics.selectedMonth
+            .averageLoser
+        )}
+        profit={
+          dashboardMetrics.selectedMonth
+            .averageLoser
+        }
+      />
+
+      <DashboardCard
+        title="Average Weekly P/L"
+        value={formatSignedMoney(
+          dashboardMetrics.selectedMonth
+            .averageWeeklyPL
+        )}
+        profit={
+          dashboardMetrics.selectedMonth
+            .averageWeeklyPL
+        }
       />
     </>
   )}
-
-  <DashboardCard
-    title="Win Rate"
-    value={`${dashboardMetrics.winRate}%`}
-  />
-
-  <DashboardCard
-    title="Total Trades"
-    value={dashboardMetrics.totalTrades}
-  />
-
-  <DashboardCard
-    title="Average Winner"
-    value={formatMoney(
-      dashboardMetrics.averageWinner
-    )}
-    profit={
-      dashboardMetrics.averageWinner
-    }
-  />
-
-  <DashboardCard
-    title="Average Loser"
-    value={formatMoney(
-      dashboardMetrics.averageLoser
-    )}
-    profit={
-      dashboardMetrics.averageLoser
-    }
-  />
-
-  {statsView === "month" ? (
-  <DashboardCard
-    title="Average Weekly P/L"
-    value={formatSignedMoney(
-      dashboardMetrics.averageWeeklyPL
-    )}
-    profit={
-      dashboardMetrics.averageWeeklyPL
-    }
-  />
-) : (
-  <DashboardCard
-    title="Profit Factor"
-    value={formatProfitFactor(
-      dashboardMetrics.profitFactor
-    )}
-  />
-)}
 </section>
 
         <div className="space-y-6">
