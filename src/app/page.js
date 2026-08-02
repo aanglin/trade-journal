@@ -27,6 +27,7 @@ import {
 import {
   averageLoser,
   averageWinner,
+  calculateProfit,
   currentBalance,
   profitByPeriod,
   profitFactor,
@@ -74,6 +75,8 @@ export default function Home() {
   });
 
   const [tradeHistoryCollapsed, setTradeHistoryCollapsed] = useState(false);
+
+  const [statsView, setStatsView] = useState("all");
 
   const [selectedCalendarMonth, setSelectedCalendarMonth] = useState(() => {
     const today = new Date();
@@ -163,43 +166,158 @@ export default function Home() {
     active = false;
   };
 }, [user]);
-  const dashboardMetrics = useMemo(() => {
-    const startingBalance = Number(settings.startingBalance || 0);
-    const netPL = totalProfit(trades);
-    const balance = currentBalance(startingBalance, trades);
+  // const dashboardMetrics = useMemo(() => {
+  //   const startingBalance = Number(settings.startingBalance || 0);
+  //   const netPL = totalProfit(trades);
+  //   const balance = currentBalance(startingBalance, trades);
 
-    return {
-      startingBalance,
-      netPL,
-      balance,
-      todayPL: profitByPeriod(trades, "today"),
-      weekPL: profitByPeriod(trades, "week"),
-      monthPL: profitByPeriod(trades, "month"),
-      returnPercentage:
-        startingBalance > 0 ? (netPL / startingBalance) * 100 : 0,
-      winRate: winRate(trades),
-      averageWinner: averageWinner(trades),
-      averageLoser: averageLoser(trades),
-      profitFactor: profitFactor(trades),
-      totalTrades: trades.length,
-    };
-  }, [settings.startingBalance, trades]);
+  //   return {
+  //     startingBalance,
+  //     netPL,
+  //     balance,
+  //     todayPL: profitByPeriod(trades, "today"),
+  //     weekPL: profitByPeriod(trades, "week"),
+  //     monthPL: profitByPeriod(trades, "month"),
+  //     returnPercentage:
+  //       startingBalance > 0 ? (netPL / startingBalance) * 100 : 0,
+  //     winRate: winRate(trades),
+  //     averageWinner: averageWinner(trades),
+  //     averageLoser: averageLoser(trades),
+  //     profitFactor: profitFactor(trades),
+  //     totalTrades: trades.length,
+  //   };
+  // }, [settings.startingBalance, trades]);
+
+  // const selectedMonthTrades = useMemo(() => {
+  //   const selectedYear = selectedCalendarMonth.getFullYear();
+  //   const selectedMonth = selectedCalendarMonth.getMonth();
+
+  //   return trades.filter((trade) => {
+  //     if (!trade.date) return false;
+
+  //     const tradeDate = new Date(`${trade.date}T00:00:00`);
+
+  //     return (
+  //       tradeDate.getFullYear() === selectedYear &&
+  //       tradeDate.getMonth() === selectedMonth
+  //     );
+  //   });
+  // }, [selectedCalendarMonth, trades]);
 
   const selectedMonthTrades = useMemo(() => {
-    const selectedYear = selectedCalendarMonth.getFullYear();
-    const selectedMonth = selectedCalendarMonth.getMonth();
+  const selectedYear =
+    selectedCalendarMonth.getFullYear();
 
-    return trades.filter((trade) => {
-      if (!trade.date) return false;
+  const selectedMonth =
+    selectedCalendarMonth.getMonth();
 
-      const tradeDate = new Date(`${trade.date}T00:00:00`);
+  return trades.filter((trade) => {
+    if (!trade.date) return false;
 
-      return (
-        tradeDate.getFullYear() === selectedYear &&
-        tradeDate.getMonth() === selectedMonth
-      );
-    });
-  }, [selectedCalendarMonth, trades]);
+    const tradeDate = new Date(
+      `${trade.date}T00:00:00`
+    );
+
+    return (
+      tradeDate.getFullYear() === selectedYear &&
+      tradeDate.getMonth() === selectedMonth
+    );
+  });
+}, [selectedCalendarMonth, trades]);
+
+const selectedMonthLabel = useMemo(() => {
+  return selectedCalendarMonth.toLocaleDateString(
+    "en-US",
+    {
+      month: "long",
+      year: "numeric",
+    }
+  );
+}, [selectedCalendarMonth]);
+
+const statsTrades =
+  statsView === "month"
+    ? selectedMonthTrades
+    : trades;
+
+const dashboardMetrics = useMemo(() => {
+  const startingBalance = Number(
+    settings.startingBalance || 0
+  );
+
+  const allTimeNetPL = totalProfit(trades);
+  const scopedNetPL = totalProfit(statsTrades);
+
+  const scopedResults = statsTrades.map((trade) =>
+    calculateProfit(trade)
+  );
+
+  const bestTrade =
+    scopedResults.length > 0
+      ? Math.max(...scopedResults)
+      : 0;
+
+  const worstTrade =
+    scopedResults.length > 0
+      ? Math.min(...scopedResults)
+      : 0;
+
+  const averageTrade =
+    statsTrades.length > 0
+      ? scopedNetPL / statsTrades.length
+      : 0;
+
+  return {
+    balance: currentBalance(
+      startingBalance,
+      trades
+    ),
+
+    allTimeNetPL,
+    scopedNetPL,
+
+    todayPL: profitByPeriod(
+      trades,
+      "today"
+    ),
+
+    weekPL: profitByPeriod(
+      trades,
+      "week"
+    ),
+
+    monthPL: profitByPeriod(
+      trades,
+      "month"
+    ),
+
+    returnPercentage:
+      startingBalance > 0
+        ? (allTimeNetPL / startingBalance) *
+          100
+        : 0,
+
+    winRate: winRate(statsTrades),
+    totalTrades: statsTrades.length,
+
+    averageTrade,
+    averageWinner:
+      averageWinner(statsTrades),
+
+    averageLoser:
+      averageLoser(statsTrades),
+
+    bestTrade,
+    worstTrade,
+
+    profitFactor:
+      profitFactor(statsTrades),
+  };
+}, [
+  settings.startingBalance,
+  trades,
+  statsTrades,
+]);
 
   function showNotice(type, message) {
     setNotice({
@@ -564,67 +682,171 @@ export default function Home() {
           />
         )}
 
+        <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-slate-800 bg-slate-900 p-3 sm:flex-row sm:items-center sm:justify-between">
+  <div>
+    <p className="text-sm font-semibold text-white">
+      Performance Statistics
+    </p>
+
+    <p className="mt-1 text-xs text-slate-500">
+      {statsView === "all"
+        ? "Showing results from every saved trade."
+        : `Showing results for ${selectedMonthLabel}.`}
+    </p>
+  </div>
+
+  <div className="grid grid-cols-2 rounded-xl border border-slate-700 bg-slate-950 p-1">
+    <button
+      type="button"
+      onClick={() => setStatsView("all")}
+      aria-pressed={statsView === "all"}
+      className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+        statsView === "all"
+          ? "bg-blue-600 text-white"
+          : "text-slate-400 hover:text-white"
+      }`}
+    >
+      All Time
+    </button>
+
+    <button
+      type="button"
+      onClick={() => setStatsView("month")}
+      aria-pressed={statsView === "month"}
+      className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+        statsView === "month"
+          ? "bg-blue-600 text-white"
+          : "text-slate-400 hover:text-white"
+      }`}
+    >
+      Selected Month
+    </button>
+  </div>
+</div>
+
         <section className="mb-6 grid grid-cols-2 gap-3 sm:mb-8 sm:gap-4 lg:grid-cols-3 xl:grid-cols-5">
-          <DashboardCard
-            title="Current Balance"
-            value={formatMoney(dashboardMetrics.balance)}
-            subtitle={`${formatPercentage(
-              dashboardMetrics.returnPercentage
-            )} since start`}
-            emphasis
-          />
+  <DashboardCard
+    title="Current Balance"
+    value={formatMoney(
+      dashboardMetrics.balance
+    )}
+    subtitle="Cumulative account balance"
+    emphasis
+  />
 
-          <DashboardCard
-            title="Net Profit/Loss"
-            value={formatSignedMoney(dashboardMetrics.netPL)}
-            profit={dashboardMetrics.netPL}
-          />
+  {statsView === "all" ? (
+    <>
+      <DashboardCard
+        title="Net Profit/Loss"
+        value={formatSignedMoney(
+          dashboardMetrics.allTimeNetPL
+        )}
+        profit={
+          dashboardMetrics.allTimeNetPL
+        }
+      />
 
-          <DashboardCard
-            title="Today's P/L"
-            value={formatSignedMoney(dashboardMetrics.todayPL)}
-            profit={dashboardMetrics.todayPL}
-          />
+      <DashboardCard
+        title="Today's P/L"
+        value={formatSignedMoney(
+          dashboardMetrics.todayPL
+        )}
+        profit={dashboardMetrics.todayPL}
+      />
 
-          <DashboardCard
-            title="This Week"
-            value={formatSignedMoney(dashboardMetrics.weekPL)}
-            profit={dashboardMetrics.weekPL}
-          />
+      <DashboardCard
+        title="This Week"
+        value={formatSignedMoney(
+          dashboardMetrics.weekPL
+        )}
+        profit={dashboardMetrics.weekPL}
+      />
 
-          <DashboardCard
-            title="This Month"
-            value={formatSignedMoney(dashboardMetrics.monthPL)}
-            profit={dashboardMetrics.monthPL}
-          />
+      <DashboardCard
+        title="This Month"
+        value={formatSignedMoney(
+          dashboardMetrics.monthPL
+        )}
+        profit={dashboardMetrics.monthPL}
+      />
+    </>
+  ) : (
+    <>
+      <DashboardCard
+        title={`${selectedMonthLabel} P/L`}
+        value={formatSignedMoney(
+          dashboardMetrics.scopedNetPL
+        )}
+        profit={
+          dashboardMetrics.scopedNetPL
+        }
+      />
 
-          <DashboardCard
-            title="Win Rate"
-            value={`${dashboardMetrics.winRate}%`}
-          />
+      <DashboardCard
+        title="Average Trade"
+        value={formatSignedMoney(
+          dashboardMetrics.averageTrade
+        )}
+        profit={
+          dashboardMetrics.averageTrade
+        }
+      />
 
-          <DashboardCard
-            title="Total Trades"
-            value={dashboardMetrics.totalTrades}
-          />
+      <DashboardCard
+        title="Best Trade"
+        value={formatSignedMoney(
+          dashboardMetrics.bestTrade
+        )}
+        profit={dashboardMetrics.bestTrade}
+      />
 
-          <DashboardCard
-            title="Average Winner"
-            value={formatMoney(dashboardMetrics.averageWinner)}
-            profit={dashboardMetrics.averageWinner}
-          />
+      <DashboardCard
+        title="Worst Trade"
+        value={formatSignedMoney(
+          dashboardMetrics.worstTrade
+        )}
+        profit={dashboardMetrics.worstTrade}
+      />
+    </>
+  )}
 
-          <DashboardCard
-            title="Average Loser"
-            value={formatMoney(dashboardMetrics.averageLoser)}
-            profit={dashboardMetrics.averageLoser}
-          />
+  <DashboardCard
+    title="Win Rate"
+    value={`${dashboardMetrics.winRate}%`}
+  />
 
-          <DashboardCard
-            title="Profit Factor"
-            value={formatProfitFactor(dashboardMetrics.profitFactor)}
-          />
-        </section>
+  <DashboardCard
+    title="Total Trades"
+    value={dashboardMetrics.totalTrades}
+  />
+
+  <DashboardCard
+    title="Average Winner"
+    value={formatMoney(
+      dashboardMetrics.averageWinner
+    )}
+    profit={
+      dashboardMetrics.averageWinner
+    }
+  />
+
+  <DashboardCard
+    title="Average Loser"
+    value={formatMoney(
+      dashboardMetrics.averageLoser
+    )}
+    profit={
+      dashboardMetrics.averageLoser
+    }
+  />
+
+  <DashboardCard
+    title="Profit Factor"
+    value={formatProfitFactor(
+      dashboardMetrics.profitFactor
+    )}
+  />
+</section>
 
         <div className="space-y-6">
           <TradeCalendar
