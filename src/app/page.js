@@ -166,43 +166,6 @@ export default function Home() {
     active = false;
   };
 }, [user]);
-  // const dashboardMetrics = useMemo(() => {
-  //   const startingBalance = Number(settings.startingBalance || 0);
-  //   const netPL = totalProfit(trades);
-  //   const balance = currentBalance(startingBalance, trades);
-
-  //   return {
-  //     startingBalance,
-  //     netPL,
-  //     balance,
-  //     todayPL: profitByPeriod(trades, "today"),
-  //     weekPL: profitByPeriod(trades, "week"),
-  //     monthPL: profitByPeriod(trades, "month"),
-  //     returnPercentage:
-  //       startingBalance > 0 ? (netPL / startingBalance) * 100 : 0,
-  //     winRate: winRate(trades),
-  //     averageWinner: averageWinner(trades),
-  //     averageLoser: averageLoser(trades),
-  //     profitFactor: profitFactor(trades),
-  //     totalTrades: trades.length,
-  //   };
-  // }, [settings.startingBalance, trades]);
-
-  // const selectedMonthTrades = useMemo(() => {
-  //   const selectedYear = selectedCalendarMonth.getFullYear();
-  //   const selectedMonth = selectedCalendarMonth.getMonth();
-
-  //   return trades.filter((trade) => {
-  //     if (!trade.date) return false;
-
-  //     const tradeDate = new Date(`${trade.date}T00:00:00`);
-
-  //     return (
-  //       tradeDate.getFullYear() === selectedYear &&
-  //       tradeDate.getMonth() === selectedMonth
-  //     );
-  //   });
-  // }, [selectedCalendarMonth, trades]);
 
   const selectedMonthTrades = useMemo(() => {
   const selectedYear =
@@ -291,6 +254,11 @@ const dashboardMetrics = useMemo(() => {
       "month"
     ),
 
+    averageWeeklyPL: calculateAverageWeeklyPL(
+  selectedMonthTrades,
+  selectedCalendarMonth
+),
+
     returnPercentage:
       startingBalance > 0
         ? (allTimeNetPL / startingBalance) *
@@ -317,6 +285,8 @@ const dashboardMetrics = useMemo(() => {
   settings.startingBalance,
   trades,
   statsTrades,
+  selectedMonthTrades,
+  selectedCalendarMonth,
 ]);
 
   function showNotice(type, message) {
@@ -840,12 +810,24 @@ const dashboardMetrics = useMemo(() => {
     }
   />
 
+  {statsView === "month" ? (
+  <DashboardCard
+    title="Average Weekly P/L"
+    value={formatSignedMoney(
+      dashboardMetrics.averageWeeklyPL
+    )}
+    profit={
+      dashboardMetrics.averageWeeklyPL
+    }
+  />
+) : (
   <DashboardCard
     title="Profit Factor"
     value={formatProfitFactor(
       dashboardMetrics.profitFactor
     )}
   />
+)}
 </section>
 
         <div className="space-y-6">
@@ -1141,6 +1123,35 @@ function formatPercentage(amount) {
 
   return "0.00%";
 }
+
+function calculateAverageWeeklyPL(
+  monthlyTrades,
+  selectedMonth
+) {
+  if (monthlyTrades.length === 0) {
+    return 0;
+  }
+
+  const year = selectedMonth.getFullYear();
+  const month = selectedMonth.getMonth();
+
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+
+  const calendarDays =
+    firstDay.getDay() + lastDay.getDate();
+
+  const weeksInMonth = Math.ceil(
+    calendarDays / 7
+  );
+
+  const monthlyProfit = totalProfit(
+    monthlyTrades
+  );
+
+  return monthlyProfit / weeksInMonth;
+}
+
 
 function formatProfitFactor(value) {
   const number = Number(value);
